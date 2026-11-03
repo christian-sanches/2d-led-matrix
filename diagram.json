@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "author": "Anonymous maker",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-v1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-neopixel-matrix", "id": "matrix", "top": -150, "left": 200, "attrs": { "cols": "8", "rows": "8" } },
+    { "type": "wokwi-pushbutton", "id": "btn", "top": 150, "left": -150, "attrs": { "color": "red" } },
+    { "type": "wokwi-ir-receiver", "id": "ir", "top": 150, "left": 150, "attrs": {} },
+    { "type": "wokwi-microsd-card", "id": "sd1", "top": 173.03, "left": 182.47, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:G.4", "matrix:GND", "black", [ "v0" ] ],
+    [ "esp:3V.2", "matrix:VCC", "red", [ "v0" ] ],
+    [ "esp:D9", "matrix:DIN", "green", [ "v0" ] ],
+
+    [ "esp:G.3", "btn:1.GND", "black", [ "v0" ] ],
+    [ "esp:D8", "btn:2.S", "blue", [ "v0" ] ],
+
+    [ "esp:G.5", "ir:GND", "black", [ "v0" ] ],
+    [ "esp:3V.3", "ir:VCC", "red", [ "v0" ] ],
+    [ "esp:D3", "ir:OUT", "purple", [ "v0" ] ],
+
+    [ "esp:G.6", "sd1:GND", "black", [ "v0" ] ],
+    [ "esp:3V.4", "sd1:VCC", "red", [ "v0" ] ],
+    [ "esp:D4", "sd1:CS", "orange", [ "v0" ] ],
+    [ "esp:D5", "sd1:SCK", "yellow", [ "v0" ] ],
+    [ "esp:D6", "sd1:MISO", "brown", [ "v0" ] ],
+    [ "esp:D7", "sd1:MOSI", "purple", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}

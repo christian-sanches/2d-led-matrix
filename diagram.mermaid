@@ -1,0 +1,60 @@
+graph LR
+    %% styles
+    classDef nodemcu fill:#333,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef component fill:#1f77b4,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef power fill:#d62728,stroke:#fff,stroke-width:1px,color:#fff;
+    classDef gnd fill:#2ca02c,stroke:#fff,stroke-width:1px,color:#fff;
+
+    %%  NodeMCU nodes by side
+    subgraph Right_Side [Right Side of NodeMCU]
+        D1[D1 / GPIO5 / Button]:::nodemcu
+        D2[D2 / GPIO4 / LED Matrix]:::nodemcu
+        D3[D3 / GPIO0 / IR Receiver]:::nodemcu
+        D5[D5 / GPIO14 / SCK]:::nodemcu
+        D6[D6 / GPIO12 / MISO]:::nodemcu
+        D7[D7 / GPIO13 / MOSI]:::nodemcu
+        D8[D8 / GPIO15 / CS]:::nodemcu
+    end
+
+    subgraph Power_NodeMCU [Power Lines]
+        3V3[3V3]:::power
+        GND[GND]:::gnd
+    end
+
+    %% External Components
+    subgraph Accessories [Your Accessories]
+        Button[Power Button]:::component
+        IR_Receiver[IR Receiver Data]:::component
+        LED_Strip[LED Matrix Data]:::component
+    end
+
+    subgraph MicroSD [MicroSD Card Reader]
+        SD_CLK[CLK / SCK]:::component
+        SD_MISO[MISO]:::component
+        SD_MOSI[MOSI]:::component
+        SD_CS[CS]:::component
+        SD_VCC[VCC]:::power
+        SD_GND[GND]:::gnd
+    end
+
+    %% SD Data Connections (Fixed HSPI Pins)
+    D5 -->|SCK| SD_CLK
+    D6 -->|MISO| SD_MISO
+    D7 -->|MOSI| SD_MOSI
+    D8 -->|CS| SD_CS
+
+    %% Accessories Data Connections
+    D1 -->|Button Signal| Button
+    D2 -->|LED Data| LED_Strip
+    D3 -->|IR Signal| IR_Receiver
+
+    %% 3.3V Distribution
+    3V3 -.-> SD_VCC
+    3V3 -.-> IR_Receiver
+    3V3 -.-> LED_Strip
+
+    %% GND Distribution
+    GND -.-> SD_GND
+    GND -.-> Button
+    GND -.-> IR_Receiver
+    GND -.-> LED_Strip

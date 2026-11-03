@@ -1,0 +1,73 @@
+(kicad_sch (version 20230121) (generator eeschema)
+
+  (uuid 8d48e1a2-4a5d-4f81-9b0d-2e71fa0c2299)
+
+  (paper "A4")
+
+  (title_block
+    (title "ESP8266 + Matriz 8x8 LED + SD SPI")
+    (date "2026-09-12")
+    (rev "1.0")
+    (company "Projeto Customizado")
+    (comment 1 "Pinout configurado conforme firmware Arduino")
+  )
+
+  (lib_symbols
+    (symbol "MCU_ESP8266:NodeMCU_V2" (in_bom yes) (on_board yes)
+      (property "Reference" "U1" (at -10.16 22.86 0) (effects (font (size 1.27 1.27))))
+      (property "Value" "NodeMCU_V2" (at 2.54 22.86 0) (effects (font (size 1.27 1.27))))
+      (property "Footprint" "Module:NodeMCU_V2" (at 0 0 0) (effects (font (size 1.27 1.27)) (hide yes)))
+      (symbol "NodeMCU_V2_1_1"
+        (rect (fill (rectangle)) (stroke (width 0.254) (type default)) (polyline (pts (xy -12.7 20.32) (xy 12.7 20.32) (xy 12.7 -20.32) (xy -12.7 -20.32) (xy -12.7 20.32))))
+        (pin input line (at -15.24 15.24 0) (length 2.54) (name "A0" (effects (font (size 1.27 1.27)))) (number "1" (effects (font (size 1.27 1.27)))))
+        (pin bidirectional line (at -15.24 10.16 0) (length 2.54) (name "GPIO16/D0" (effects (font (size 1.27 1.27)))) (number "2" (effects (font (size 1.27 1.27)))))
+        (pin bidirectional line (at -15.24 5.08 0) (length 2.54) (name "GPIO5/D1" (effects (font (size 1.27 1.27)))) (number "3" (effects (font (size 1.27 1.27)))))
+        (pin bidirectional line (at -15.24 0 0) (length 2.54) (name "GPIO4/D2" (effects (font (size 1.27 1.27)))) (number "4" (effects (font (size 1.27 1.27)))))
+        (pin bidirectional line (at -15.24 -5.08 0) (length 2.54) (name "GPIO0/D3" (effects (font (size 1.27 1.27)))) (number "5" (effects (font (size 1.27 1.27)))))
+        (pin bidirectional line (at -15.24 -10.16 0) (length 2.54) (name "GPIO2/D4" (effects (font (size 1.27 1.27)))) (number "6" (effects (font (size 1.27 1.27)))))
+        (pin power_in line (at -15.24 -15.24 0) (length 2.54) (name "3V3" (effects (font (size 1.27 1.27)))) (number "7" (effects (font (size 1.27 1.27)))))
+        (pin power_in line (at -15.24 -17.78 0) (length 2.54) (name "GND" (effects (font (size 1.27 1.27)))) (number "8" (effects (font (size 1.27 1.27)))))
+        (pin bidirectional line (at 15.24 -10.16 180) (length 2.54) (name "GPIO15/D8" (effects (font (size 1.27 1.27)))) (number "9" (effects (font (size 1.27 1.27)))))
+        (pin bidirectional line (at 15.24 -5.08 180) (length 2.54) (name "GPIO13/D7" (effects (font (size 1.27 1.27)))) (number "10" (effects (font (size 1.27 1.27)))))
+        (pin bidirectional line (at 15.24 0 180) (length 2.54) (name "GPIO12/D6" (effects (font (size 1.27 1.27)))) (number "11" (effects (font (size 1.27 1.27)))))
+        (pin bidirectional line (at 15.24 5.08 180) (length 2.54) (name "GPIO14/D5" (effects (font (size 1.27 1.27)))) (number "12" (effects (font (size 1.27 1.27)))))
+        (pin power_in line (at 15.24 15.24 180) (length 2.54) (name "VIN_5V" (effects (font (size 1.27 1.27)))) (number "13" (effects (font (size 1.27 1.27)))))
+      )
+    )
+  )
+
+  <!-- NodeMCU Instance -->
+  (symbol (lib_id "MCU_ESP8266:NodeMCU_V2") (at 100 100 0) (unit 1)
+    (in_bom yes) (on_board yes) (uuid 1b04bc3e-1051-4d1d-a9b0-9f5e1a7402d1)
+    (property "Reference" "U1" (at 100 75 0))
+    (property "Value" "NodeMCU_ESP8266" (at 100 78 0))
+  )
+
+  <!-- Global Labels for Net Connections -->
+  (label "BTN_POWER" (at 75 94.92 180) (effects (font (size 1.27 1.27))))
+  (wire (pts (xy 84.76 94.92) (xy 75 94.92)))
+
+  (label "LED_DATA" (at 75 100 180) (effects (font (size 1.27 1.27))))
+  (wire (pts (xy 84.76 100) (xy 75 100)))
+
+  (label "IR_DATA" (at 75 105.08 180) (effects (font (size 1.27 1.27))))
+  (wire (pts (xy 84.76 105.08) (xy 75 105.08)))
+
+  (label "SD_CS" (at 125 110.16 0) (effects (font (size 1.27 1.27))))
+  (wire (pts (xy 115.24 110.16) (xy 125 110.16)))
+
+  (label "SD_MOSI" (at 125 105.08 0) (effects (font (size 1.27 1.27))))
+  (wire (pts (xy 115.24 105.08) (xy 125 105.08)))
+
+  (label "SD_MISO" (at 125 100 0) (effects (font (size 1.27 1.27))))
+  (wire (pts (xy 115.24 100) (xy 125 100)))
+
+  (label "SD_SCK" (at 125 94.92 0) (effects (font (size 1.27 1.27))))
+  (wire (pts (xy 115.24 94.92) (xy 125 94.92)))
+
+  (label "VCC_5V" (at 125 84.76 0) (effects (font (size 1.27 1.27))))
+  (wire (pts (xy 115.24 84.76) (xy 125 84.76)))
+
+  (label "GND" (at 75 117.78 180) (effects (font (size 1.27 1.27))))
+  (wire (pts (xy 84.76 117.78) (xy 75 117.78)))
+)
