@@ -1,5 +1,7 @@
 #pragma once
 
+#include <BitmapText.h>
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -81,7 +83,8 @@ public:
     static const uint32_t MIN_TIMEOUT_MS = 5000;
     static const uint32_t MAX_TIMEOUT_MS = 10000;
     static const uint8_t BRIGHTNESS_STEP = 16;
-    static const uint32_t SCROLL_STEP_MS = 100;
+    static const uint32_t SCROLL_STEP_MS =
+        BitmapTextScroller::DEFAULT_INTERVAL_MS;
     static const uint32_t VALUE_DISPLAY_MS = 3000;
 
     explicit MenuController(MenuActions& actions,
@@ -93,6 +96,9 @@ public:
     // exits at the root. Labels scroll right-to-left in reading order.
     // Settings are volatile.
     MenuUpdateResult update(uint32_t nowMs, MenuInput input = MenuInput::None);
+
+    // One pixel is scrolled per interval. Defaults to 100 ms per pixel.
+    void setScrollIntervalMs(uint32_t intervalMs);
 
     // Reset inactivity timeout for another recognized control while visible
     // (e.g. power/brightness), without restarting the current text scroll.
@@ -119,8 +125,8 @@ private:
     void enter(uint32_t nowMs);
     void exit();
     void resetScroll(uint32_t nowMs);
-    uint8_t formatLabel(char* text, size_t capacity, MenuRgb& color) const;
-    uint8_t formatValueLabel(char* text, size_t capacity, MenuRgb& color) const;
+    void formatLabel(char* text, size_t capacity, MenuRgb& color) const;
+    void formatValueLabel(char* text, size_t capacity, MenuRgb& color) const;
     void beginValueDisplay(uint32_t nowMs, bool showMode = false);
     bool expireValueDisplay(uint32_t nowMs);
     MenuUpdateResult handleActiveInput(uint32_t nowMs, MenuInput input);
@@ -132,9 +138,8 @@ private:
     MenuPage _page;
     bool _active;
     bool _editing;
-    int16_t _scrollX;
-    int16_t _valueScrollX;
-    uint32_t _lastScrollAt;
+    BitmapTextScroller _labelScroller;
+    BitmapTextScroller _valueScroller;
     uint32_t _lastValueChangeMs;
     bool _showingValue;
     bool _valueModeOnly;

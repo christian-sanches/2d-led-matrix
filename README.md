@@ -123,11 +123,15 @@ rejected; it is never retried as legacy data. Legacy playback remains supported.
   are assumed by the firmware. The physical button remains a short-press
   logical power toggle; it is not a menu key and has no long-press behavior.
 - The menu has four pages in this order: brightness, Wi-Fi, solid color, and
-  FPS. Each page scrolls a readable 3×5-font label (uppercase letters, digits,
-  and basic symbols) from right to left in normal reading order; the serial
-  monitor also prints the page name. Brightness is shown as a percentage. The
+  FPS. Each page scrolls a readable mixed-case label with digits and basic
+  symbols from right to left in normal reading order; the serial monitor also
+  prints the page name. Brightness is shown as a percentage. The
   remaining row shows a brightness or FPS bar, Wi-Fi status, or the selected
   color swatch.
+- Text rendering is reusable in `lib/BitmapText`: letters use a 4×5 mixed-case
+  bitmap font while digits keep their compact 3×5 glyphs. The non-blocking
+  `BitmapTextScroller` advances one pixel per configurable interval; the menu
+  defaults to 100 ms and exposes `setScrollIntervalMs()`.
 - Select enters brightness/color editing; Up/Down changes brightness in
   16-point steps or cycles the eight-color palette (red, green, blue, yellow,
   cyan, magenta, white, amber). Select in color editing toggles solid mode.

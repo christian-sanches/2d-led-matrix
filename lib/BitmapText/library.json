@@ -1,0 +1,8 @@
+{
+  "name": "BitmapText",
+  "version": "1.0.0",
+  "description": "Compact 4x5 text font, renderer, and configurable marquee scroller",
+  "keywords": ["bitmap", "font", "text", "marquee"],
+  "frameworks": "arduino",
+  "platforms": "*"
+}

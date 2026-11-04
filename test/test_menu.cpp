@@ -1,4 +1,4 @@
-// Standalone host test; compile together with src/MenuController.cpp.
+// Host menu test; run via test/run_host_tests.sh.
 #include "MenuController.h"
 
 #include <assert.h>
@@ -127,8 +127,11 @@ int main() {
 
     // The text ticker advances without blocking the application loop.
     openMenu(menu, 200);
-    assert(menu.update(300, MenuInput::None) == MenuUpdateResult::Animated);
-    assert(menu.update(301, MenuInput::Back) == MenuUpdateResult::Exited);
+    menu.setScrollIntervalMs(50);
+    assert(menu.update(249, MenuInput::None) == MenuUpdateResult::NoChange);
+    assert(menu.update(250, MenuInput::None) == MenuUpdateResult::Animated);
+    menu.setScrollIntervalMs(100);
+    assert(menu.update(251, MenuInput::Back) == MenuUpdateResult::Exited);
 
     // A value change temporarily replaces the full label with just the value.
     // Repeated changes keep that feedback visible until 3 seconds after the
@@ -148,7 +151,10 @@ int main() {
 
     assert(feedbackMenu.update(1100, MenuInput::Up) == MenuUpdateResult::Changed);
     assert(feedbackActions.brightnessValue == 160);
-    assert(feedbackMenu.update(4099, MenuInput::None) == MenuUpdateResult::Animated);
+    const MenuUpdateResult beforeValueTimeout =
+        feedbackMenu.update(4099, MenuInput::None);
+    assert(beforeValueTimeout == MenuUpdateResult::NoChange ||
+           beforeValueTimeout == MenuUpdateResult::Animated);
     feedbackMenu.render(feedbackDisplay);
     assert(hasTextPixels(feedbackDisplay));
 

@@ -1,40 +1,8 @@
 #include "MenuController.h"
 
 #include <stdio.h>
-#include <string.h>
 
 namespace {
-
-struct Glyph {
-    char character;
-    uint8_t rows[5];
-};
-
-// Compact 3x5 uppercase font. It keeps the scrolling labels legible on an
-// 8x8 matrix without adding a display/font library or dynamic allocation.
-const Glyph FONT[] = {
-    {' ', {0, 0, 0, 0, 0}}, {'+', {0, 2, 7, 2, 0}},
-    {'-', {0, 0, 7, 0, 0}}, {'.', {0, 0, 0, 0, 2}},
-    {'%', {5, 1, 2, 4, 5}},
-    {'A', {2, 5, 7, 5, 5}}, {'B', {6, 5, 6, 5, 6}},
-    {'C', {3, 4, 4, 4, 3}}, {'D', {6, 5, 5, 5, 6}},
-    {'E', {7, 4, 6, 4, 7}}, {'F', {7, 4, 6, 4, 4}},
-    {'G', {3, 4, 5, 5, 3}}, {'H', {5, 5, 7, 5, 5}},
-    {'I', {7, 2, 2, 2, 7}}, {'J', {1, 1, 1, 5, 2}},
-    {'K', {5, 5, 6, 5, 5}}, {'L', {4, 4, 4, 4, 7}},
-    {'M', {5, 7, 7, 5, 5}}, {'N', {5, 7, 7, 7, 5}},
-    {'O', {2, 5, 5, 5, 2}}, {'P', {6, 5, 6, 4, 4}},
-    {'Q', {2, 5, 5, 3, 1}}, {'R', {6, 5, 6, 5, 5}},
-    {'S', {3, 4, 2, 1, 6}}, {'T', {7, 2, 2, 2, 2}},
-    {'U', {5, 5, 5, 5, 7}}, {'V', {5, 5, 5, 5, 2}},
-    {'W', {5, 5, 7, 7, 5}}, {'X', {5, 5, 2, 5, 5}},
-    {'Y', {5, 5, 2, 2, 2}}, {'Z', {7, 1, 2, 4, 7}},
-    {'0', {7, 5, 5, 5, 7}}, {'1', {2, 6, 2, 2, 7}},
-    {'2', {6, 1, 2, 4, 7}}, {'3', {6, 1, 2, 1, 6}},
-    {'4', {5, 5, 7, 1, 1}}, {'5', {7, 4, 6, 1, 6}},
-    {'6', {3, 4, 6, 5, 2}}, {'7', {7, 1, 2, 2, 2}},
-    {'8', {2, 5, 2, 5, 2}}, {'9', {2, 5, 3, 1, 6}}
-};
 
 const MenuRgb UI_COLOR = {0, 180, 255};
 const MenuRgb ON_COLOR = {0, 220, 40};
@@ -54,17 +22,10 @@ const MenuRgb PALETTE[MenuController::COLOR_COUNT] = {
 };
 
 const char* const COLOR_NAMES[MenuController::COLOR_COUNT] = {
-    "RED", "GREEN", "BLUE", "YELLOW", "CYAN", "MAGENTA", "WHITE", "AMBER"
+    "Red", "Green", "Blue", "Yellow", "Cyan", "Magenta", "White", "Amber"
 };
 
 const uint8_t FPS_PRESETS[MenuController::FPS_PRESET_COUNT] = {15, 24, 30, 48, 60};
-
-const Glyph& glyphFor(char character) {
-    for (size_t i = 0; i < sizeof(FONT) / sizeof(FONT[0]); ++i) {
-        if (FONT[i].character == character) return FONT[i];
-    }
-    return FONT[0];
-}
 
 void pixel(MenuDisplay& display, int16_t x, uint8_t y, const MenuRgb& color) {
     if (x >= 0 && x < 8 && y < 8) {
@@ -73,19 +34,26 @@ void pixel(MenuDisplay& display, int16_t x, uint8_t y, const MenuRgb& color) {
     }
 }
 
-void drawText(MenuDisplay& display, int16_t startX, const char* text,
-              const MenuRgb& color) {
-    for (size_t characterIndex = 0; text[characterIndex] != '\0'; ++characterIndex) {
-        const Glyph& glyph = glyphFor(text[characterIndex]);
-        const int16_t glyphX = startX + static_cast<int16_t>(characterIndex * 4U);
-        for (uint8_t row = 0; row < 5; ++row) {
-            for (uint8_t column = 0; column < 3; ++column) {
-                if (glyph.rows[row] & static_cast<uint8_t>(1U << (2U - column))) {
-                    pixel(display, glyphX + column, row + 1, color);
-                }
-            }
+class MenuFontSink : public BitmapPixelSink {
+public:
+    explicit MenuFontSink(MenuDisplay& display) : _display(display) {}
+
+    void setPixel(int16_t x, int16_t y, uint8_t red, uint8_t green,
+                  uint8_t blue) {
+        if (x >= 0 && x < 8 && y >= 0 && y < 8) {
+            _display.setPixel(static_cast<uint8_t>(x),
+                              static_cast<uint8_t>(y), red, green, blue);
         }
     }
+
+private:
+    MenuDisplay& _display;
+};
+
+void drawText(MenuDisplay& display, const char* text, int16_t x,
+              const MenuRgb& color) {
+    MenuFontSink sink(display);
+    BitmapFont::drawText(sink, text, x, 1, color.red, color.green, color.blue);
 }
 
 void drawStatusBar(MenuDisplay& display, uint8_t segments, const MenuRgb& color) {
@@ -109,9 +77,8 @@ MenuController::MenuController(MenuActions& actions, uint32_t timeoutMs)
       _page(MenuPage::Brightness),
       _active(false),
       _editing(false),
-      _scrollX(0),
-      _valueScrollX(0),
-      _lastScrollAt(0),
+      _labelScroller(SCROLL_STEP_MS),
+      _valueScroller(SCROLL_STEP_MS),
       _lastValueChangeMs(0),
       _showingValue(false),
       _valueModeOnly(false) {}
@@ -160,91 +127,76 @@ uint32_t MenuController::normalizedTimeout(uint32_t value) const {
     return value;
 }
 
-uint8_t MenuController::formatLabel(char* text, size_t capacity,
-                                    MenuRgb& color) const {
-    if (capacity == 0) return 0;
-    int written = 0;
+void MenuController::formatLabel(char* text, size_t capacity,
+                                 MenuRgb& color) const {
+    if (capacity == 0) return;
     switch (_page) {
     case MenuPage::Brightness: {
         color = UI_COLOR;
         const unsigned percent =
             (static_cast<unsigned>(_actions.brightness()) * 100U + 127U) / 255U;
-        written = snprintf(text, capacity, "BRIGHT %u%%", percent);
+        snprintf(text, capacity, "Bright %u%%", percent);
         break;
     }
     case MenuPage::Wifi:
         color = _actions.wifiEnabled() ? ON_COLOR : OFF_COLOR;
-        written = snprintf(text, capacity, "WIFI %s",
+        snprintf(text, capacity, "Wi-Fi %s",
                            _actions.wifiEnabled() ? "ON" : "OFF");
         break;
     case MenuPage::SolidColor: {
         const uint8_t index = clampColorIndex(_actions.solidColorIndex());
         color = PALETTE[index];
-        written = snprintf(text, capacity, "%s %s", COLOR_NAMES[index],
-                           _actions.solidModeEnabled() ? "SOLID" : "ANIM");
+        snprintf(text, capacity, "%s %s", COLOR_NAMES[index],
+                 _actions.solidModeEnabled() ? "Solid" : "Anim");
         break;
     }
     case MenuPage::Fps:
         color = UI_COLOR;
-        written = snprintf(text, capacity, "FPS %u",
-                           static_cast<unsigned>(clampFps(_actions.fps())));
+        snprintf(text, capacity, "FPS %u",
+                 static_cast<unsigned>(clampFps(_actions.fps())));
         break;
     }
-    if (written < 0) {
-        text[0] = '\0';
-        return 0;
-    }
-    if (static_cast<size_t>(written) >= capacity) written = static_cast<int>(capacity - 1);
-    return static_cast<uint8_t>(written);
 }
 
-uint8_t MenuController::formatValueLabel(char* text, size_t capacity,
-                                         MenuRgb& color) const {
-    if (capacity == 0) return 0;
-    int written = 0;
+void MenuController::formatValueLabel(char* text, size_t capacity,
+                                      MenuRgb& color) const {
+    if (capacity == 0) return;
     switch (_page) {
     case MenuPage::Brightness: {
         const unsigned percent =
             (static_cast<unsigned>(_actions.brightness()) * 100U + 127U) / 255U;
         color = UI_COLOR;
-        written = snprintf(text, capacity, "%u", percent);
+        snprintf(text, capacity, "%u", percent);
         break;
     }
     case MenuPage::Wifi:
         color = _actions.wifiEnabled() ? ON_COLOR : OFF_COLOR;
-        written = snprintf(text, capacity, "%s",
-                           _actions.wifiEnabled() ? "ON" : "OFF");
+        snprintf(text, capacity, "%s",
+                 _actions.wifiEnabled() ? "ON" : "OFF");
         break;
     case MenuPage::SolidColor:
         if (_valueModeOnly) {
             color = _actions.solidModeEnabled() ? ON_COLOR : OFF_COLOR;
-            written = snprintf(text, capacity, "%s",
-                               _actions.solidModeEnabled() ? "SOLID" : "ANIM");
+            snprintf(text, capacity, "%s",
+                     _actions.solidModeEnabled() ? "Solid" : "Anim");
         } else {
             const uint8_t index = clampColorIndex(_actions.solidColorIndex());
             color = PALETTE[index];
-            written = snprintf(text, capacity, "%s", COLOR_NAMES[index]);
+            snprintf(text, capacity, "%s", COLOR_NAMES[index]);
         }
         break;
     case MenuPage::Fps:
         color = UI_COLOR;
-        written = snprintf(text, capacity, "%u",
-                           static_cast<unsigned>(clampFps(_actions.fps())));
+        snprintf(text, capacity, "%u",
+                 static_cast<unsigned>(clampFps(_actions.fps())));
         break;
     }
-    if (written < 0) {
-        text[0] = '\0';
-        return 0;
-    }
-    if (static_cast<size_t>(written) >= capacity) written = static_cast<int>(capacity - 1);
-    return static_cast<uint8_t>(written);
 }
 
 void MenuController::resetScroll(uint32_t nowMs) {
     _showingValue = false;
     _valueModeOnly = false;
-    _scrollX = 8;
-    _lastScrollAt = nowMs;
+    _labelScroller.reset(nowMs, 8);
 }
 
 void MenuController::beginValueDisplay(uint32_t nowMs, bool showMode) {
@@ -253,26 +205,30 @@ void MenuController::beginValueDisplay(uint32_t nowMs, bool showMode) {
 
     char text[16];
     MenuRgb color = UI_COLOR;
-    const uint8_t length = formatValueLabel(text, sizeof(text), color);
-    const int16_t textWidth = static_cast<int16_t>(length * 4U);
+    formatValueLabel(text, sizeof(text), color);
+    const uint16_t textWidth = BitmapFont::textWidth(text);
 
     if (!wasShowingValue) {
         if (textWidth > 0 && textWidth <= 8) {
-            _valueScrollX = static_cast<int16_t>((8 - (textWidth - 1)) / 2);
+            _valueScroller.reset(nowMs,
+                static_cast<int16_t>((8 - textWidth) / 2));
         } else {
-            _valueScrollX = 0;
+            _valueScroller.reset(nowMs, 0);
         }
     } else if (textWidth > 0 && textWidth <= 8) {
         // Short values fit on-screen; keep the complete value readable even
         // when the previous (longer) value was partway through its marquee.
-        _valueScrollX = static_cast<int16_t>((8 - (textWidth - 1)) / 2);
-    } else if (_valueScrollX > 7 || _valueScrollX + textWidth <= 0) {
-        _valueScrollX = 0;
+        _valueScroller.setPosition(nowMs,
+            static_cast<int16_t>((8 - textWidth) / 2));
+    } else if (_valueScroller.x() > 7 ||
+               static_cast<int32_t>(_valueScroller.x()) + textWidth <= 0) {
+        _valueScroller.setPosition(nowMs, 0);
+    } else {
+        _valueScroller.retime(nowMs);
     }
 
     _showingValue = true;
     _lastValueChangeMs = nowMs;
-    _lastScrollAt = nowMs;
 }
 
 bool MenuController::expireValueDisplay(uint32_t nowMs) {
@@ -282,7 +238,7 @@ bool MenuController::expireValueDisplay(uint32_t nowMs) {
     }
     _showingValue = false;
     _valueModeOnly = false;
-    _lastScrollAt = nowMs;
+    _labelScroller.retime(nowMs);
     return true;
 }
 
@@ -297,6 +253,11 @@ void MenuController::enter(uint32_t nowMs) {
 void MenuController::exit() {
     _active = false;
     _editing = false;
+}
+
+void MenuController::setScrollIntervalMs(uint32_t intervalMs) {
+    _labelScroller.setIntervalMs(intervalMs);
+    _valueScroller.setIntervalMs(intervalMs);
 }
 
 MenuUpdateResult MenuController::update(uint32_t nowMs, MenuInput input) {
@@ -330,23 +291,15 @@ MenuUpdateResult MenuController::update(uint32_t nowMs, MenuInput input) {
 
     if (valueDisplayExpired) return MenuUpdateResult::Animated;
 
-    if (static_cast<uint32_t>(nowMs - _lastScrollAt) >= SCROLL_STEP_MS) {
-        char text[24];
-        MenuRgb color = UI_COLOR;
-        const uint8_t length = _showingValue
-                                   ? formatValueLabel(text, sizeof(text), color)
-                                   : formatLabel(text, sizeof(text), color);
-        const int16_t textWidth = static_cast<int16_t>(length * 4U);
-        if (_showingValue) {
-            if (textWidth > 8) {
-                --_valueScrollX;
-                if (_valueScrollX < 2 - textWidth) _valueScrollX = 8;
-            }
-        } else {
-            --_scrollX;
-            if (textWidth > 0 && _scrollX < 2 - textWidth) _scrollX = 8;
-        }
-        _lastScrollAt = nowMs;
+    char text[24];
+    MenuRgb color = UI_COLOR;
+    BitmapTextScroller& scroller = _showingValue
+                                       ? _valueScroller
+                                       : _labelScroller;
+    if (_showingValue) formatValueLabel(text, sizeof(text), color);
+    else formatLabel(text, sizeof(text), color);
+
+    if (scroller.advance(nowMs, BitmapFont::textWidth(text), 8)) {
         return MenuUpdateResult::Animated;
     }
 
@@ -459,10 +412,10 @@ void MenuController::render(MenuDisplay& display) const {
     MenuRgb color = UI_COLOR;
     if (_showingValue) {
         formatValueLabel(text, sizeof(text), color);
-        drawText(display, _valueScrollX, text, color);
+        drawText(display, text, _valueScroller.x(), color);
     } else {
         formatLabel(text, sizeof(text), color);
-        drawText(display, _scrollX, text, color);
+        drawText(display, text, _labelScroller.x(), color);
     }
 
     switch (_page) {
