@@ -50,18 +50,23 @@ Use the virtual IR remote beside the receiver:
 | --- | --- |
 | Power | Toggle logical matrix power |
 | `+` / `-` | Brightness up / down |
-| Previous / Next | Previous / next SD preset; browse menu pages while menu is open |
+| Previous / Next | Previous / next SD preset; navigate/adjust the menu while open |
 | `1`, `4`, `3`, `0` | Solid red, green, blue, white |
 | Menu | Open / close menu |
 | `8` / `9` | Alternate menu up / down |
-| Play | Select / edit |
+| Play | Select; on the FPS page, cycle the frame-rate preset |
 | Back | Back / exit |
 
-The icon pages are, in order: sun/bar = brightness, radio arcs = Wi-Fi,
-full-color preview = solid color, dial/bar = FPS, and power symbol = on/off.
-The serial monitor also prints the page name whenever it changes. Any menu
-navigation, recognized application action, or button press refreshes the
-7-second inactivity timer.
+The four text pages are, in order: `BRIGHT nn%`, `WIFI ON/OFF`, the selected
+color and `SOLID`/`ANIM`, and `FPS nn`. Uppercase letters, digits, and simple
+symbols use a built-in 3×5 bitmap font and scroll left-to-right. The status row
+shows a brightness/FPS bar, Wi-Fi state, or selected color. The serial monitor
+also prints the page name whenever it changes. The menu no longer has a power
+page; use the Power remote key or physical button instead. Any menu navigation,
+recognized application action, or button press refreshes the 7-second timeout.
+
+On the FPS page, each Play press cycles **15 → 24 → 30 → 48 → 60 FPS** and the
+selected number scrolls across the matrix.
 
 Click the green Power pushbutton or press **P** in the focused diagram to test
 the physical-button path. The serial monitor reports startup, SD, and NEC
