@@ -43,7 +43,7 @@ IR connector will be silk-labelled `SIG / 3V3 / GND`; user wire colors are not a
 
 - [x] Schematic ERC: 0 violations.
 - [x] PCB DRC: 0 violations, 0 unconnected pads.
-- [x] Gerbers and Excellon drill files generated in `fabrication/`.
+- [x] Gerbers and Excellon drill files generated in `fabrication/`; ready-to-upload archive at `2d-led-matrix-carrier-gerbers.zip`.
 - [ ] Confirm physical placement/clearance of the SD breakout and card insertion path.
 - [ ] Confirm whether the existing perfboard's four corner holes should be carried over and their exact centers (currently assumed 3.5 mm from each corner).
 - [ ] Confirm the SD breakout VCC rating and set JP1 to `3V3` or `5V`.
