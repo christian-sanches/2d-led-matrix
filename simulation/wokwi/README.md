@@ -66,6 +66,10 @@ changes. The menu no longer has a power page; use the Power remote key or
 physical button instead. Any menu navigation, recognized application action,
 or button press refreshes the 7-second timeout.
 
+When a setting changes, the display temporarily shows only its current value
+for 3 seconds after the last change. The full page label then resumes from its
+previous scroll position.
+
 On the FPS page, each Play press cycles **15 → 24 → 30 → 48 → 60 FPS** and the
 selected number scrolls across the matrix.
 
