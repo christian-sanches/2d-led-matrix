@@ -57,14 +57,14 @@ Use the virtual IR remote beside the receiver:
 | Play | Select; on the FPS page, cycle the frame-rate preset |
 | Back | Back / exit |
 
-The four text pages are, in order: `BRIGHT nn%`, `WIFI ON/OFF`, the selected
-color and `SOLID`/`ANIM`, and `FPS nn`. Uppercase letters, digits, and simple
-symbols use a built-in 3×5 bitmap font and scroll **from right to left in normal
-reading order**. The status row shows a brightness/FPS bar, Wi-Fi state, or
-selected color. The serial monitor also prints the page name whenever it
-changes. The menu no longer has a power page; use the Power remote key or
-physical button instead. Any menu navigation, recognized application action,
-or button press refreshes the 7-second timeout.
+The four text pages are, in order: `Bright nn%`, `Wi-Fi ON/OFF`, selected color
+with `Solid`/`Anim`, and `FPS nn`. Mixed-case letters and simple symbols use the
+reusable `lib/BitmapText` font: letters are 4×5 and digits remain 3×5. They
+scroll **from right to left in normal reading order**. The status row shows a
+brightness/FPS bar, Wi-Fi state, or selected color. The serial monitor also
+prints the page name whenever it changes. The menu has no power page; use the
+Power remote key or physical button instead. Any menu navigation, recognized
+application action, or button press refreshes the 7-second timeout.
 
 When a setting changes, the display temporarily shows only its current value
 for 3 seconds after the last change. The full page label then resumes from its
