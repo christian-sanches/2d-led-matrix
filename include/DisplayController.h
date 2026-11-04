@@ -1,4 +1,5 @@
 #pragma once
+#include "MatrixFormat.h"
 #include <NeoPixelBus.h>
 
 // =========================================================
@@ -10,16 +11,15 @@
 //   - Provide clear(), show(), and setPixel() methods
 //
 // Expected usage:
-//   DisplayController display(LedQuantity, PIN_LED_DATA);
+//   DisplayController display(PIN_LED_DATA);
 //   display.begin();
 //   display.setPixel(2, 3, 255, 0, 0); // x, y, r, g, b
 //   display.show();
 
 class DisplayController {
 public:
-    // ledCount: total number of LEDs (e.g. 64 for 8x8)
-    // dataPin: GPIO pin connected to NeoPixel DIN
-    DisplayController(uint16_t ledCount, uint8_t dataPin);
+    // dataPin is an ESP8266 GPIO number, not a NodeMCU Dx label.
+    explicit DisplayController(uint8_t dataPin);
 
     // Initializes the LED strip (call once in setup())
     void begin();
@@ -36,15 +36,22 @@ public:
 
     // Returns the matrix side length (e.g. 8 for 8x8)
     // Used by AnimationController to know the dimensions
-    uint8_t sideSize() const { return _side; }
+    uint8_t sideSize() const { return MatrixFormat::kWidth; }
+
+    // Brightness is applied to the original source RGB values, not to already
+    // scaled output, so repeated changes never accumulate rounding loss.
+    void setBrightness(uint8_t brightness);
+    void fill(uint8_t r, uint8_t g, uint8_t b);
 
 private:
     // Converts (x, y) into the linear strip index
     // Applies the snake-pattern for alternating row directions
     int getStripIndex(uint8_t x, uint8_t y) const;
+    void updatePixel(uint8_t x, uint8_t y);
 
-    uint16_t _ledCount;                                  // Total number of LEDs
-    uint8_t  _dataPin;                                   // Data pin connected to NeoPixel
-    uint8_t  _side;                                      // Matrix side length (derived from ledCount)
-    NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> _strip; // NeoPixel strip instance
+    uint8_t _brightness;
+    uint8_t _sourceRgb[MatrixFormat::kFrameBytes];
+    // ESP8266 DMA ignores the requested pin and outputs on GPIO3. Bit-bang
+    // honors GPIO4; its timing/IR limitations are documented in README.md.
+    NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBangWs2812xMethod> _strip;
 };

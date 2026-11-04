@@ -25,7 +25,9 @@ graph LR
     subgraph Accessories [Your Accessories]
         Button[Power Button]:::component
         IR_Receiver[IR Receiver Data]:::component
-        LED_Strip[LED Matrix Data]:::component
+        LED_Shifter[5V-compatible level shifter]:::component
+        LED_Strip[8x8 LED Matrix DIN / V+ / GND]:::component
+        PSU[External regulated supply sized for the exact matrix]:::power
     end
 
     subgraph MicroSD [MicroSD Card Reader]
@@ -33,7 +35,7 @@ graph LR
         SD_MISO[MISO]:::component
         SD_MOSI[MOSI]:::component
         SD_CS[CS]:::component
-        SD_VCC[VCC]:::power
+        SD_VCC[VCC - verify module voltage]:::power
         SD_GND[GND]:::gnd
     end
 
@@ -45,16 +47,19 @@ graph LR
 
     %% Accessories Data Connections
     D1 -->|Button Signal| Button
-    D2 -->|LED Data| LED_Strip
+    D2 -->|GPIO4 data| LED_Shifter
+    LED_Shifter --> LED_Strip
     D3 -->|IR Signal| IR_Receiver
 
     %% 3.3V Distribution
-    3V3 -.-> SD_VCC
+    3V3 -.->|only if the SD module accepts 3.3V| SD_VCC
     3V3 -.-> IR_Receiver
-    3V3 -.-> LED_Strip
+    PSU -->|matrix V+; verify exact matrix voltage| LED_Strip
 
     %% GND Distribution
     GND -.-> SD_GND
     GND -.-> Button
     GND -.-> IR_Receiver
     GND -.-> LED_Strip
+    GND -.-> LED_Shifter
+    GND -.-> PSU

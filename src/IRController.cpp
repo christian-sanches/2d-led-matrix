@@ -9,9 +9,7 @@
 // that detects the pulses of the IR signal.
 //
 // pin: GPIO connected to the IR receiver OUT pin (e.g. GPIO0/D3)
-// The IR receiver has a pull-up: when idle, output is HIGH.
-// During a signal, it pulses LOW. This is safe on ESP8266 GPIO0,
-// which must be HIGH during boot.
+// GPIO0 is a boot-strap pin; the receiver output must be HIGH while idle.
 IRController::IRController(uint8_t pin)
     : _pin(pin), _irrecv(pin), _hasNew(false) {}
 

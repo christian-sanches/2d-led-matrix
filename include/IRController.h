@@ -21,10 +21,9 @@
 //       ir.clearCommand();
 //   }
 //
-// Note: The IR receiver has an internal pull-up on the data pin.
-// When idle, it keeps the pin HIGH. When it receives a signal,
-// it pulls LOW in pulses. This is why GPIO0 is safe to use —
-// it must be HIGH during ESP8266 boot, which matches the idle state.
+// GPIO0 is a boot-strap pin and must be HIGH during ESP8266 boot. Confirm the
+// selected receiver/module holds OUT HIGH while idle; do not assume every
+// module has a suitable pull-up.
 
 class IRController {
 public:
@@ -41,6 +40,10 @@ public:
 
     // Returns the last received command code (NEC format)
     uint64_t getCommand() const { return _results.value; }
+    uint32_t getAddress() const { return _results.address; }
+    uint32_t getDecodedCommand() const { return _results.command; }
+    uint16_t getBitCount() const { return _results.bits; }
+    int getProtocolId() const { return static_cast<int>(_results.decode_type); }
 
     // Returns true if there's an unprocessed command
     bool hasCommand() const { return _hasNew; }
