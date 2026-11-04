@@ -1,0 +1,69 @@
+# Wokwi simulation (ESP32 compatibility target)
+
+This is a **separate simulation-only target** for visually exercising the
+application in Wokwi. It reuses the project's `ControlState`,
+`AnimationController`, `DisplayController`, `IRController`, and
+`MenuController`; small wrapper translation units include those shared source
+files rather than copying their implementations.
+
+Wokwi does not currently emulate the project's ESP8266 NodeMCU target. This
+project uses an ESP32 DevKit to simulate the same application behavior, so it
+does **not** validate NodeMCU boot straps, the ESP8266 bit-bang timing/IR
+interaction, real SD-card timing, power integrity, or electrical levels.
+The 5 V rail in the diagram is an ideal Wokwi source, not a wiring instruction;
+the real matrix needs its own correctly sized external supply and a common
+ground, as described in the root README.
+
+## Run it
+
+1. Install PlatformIO Core and Wokwi for VS Code 4.0.0 or newer (needed for
+   the local `sdcard/` fixture directory).
+2. Open this `simulation/wokwi` folder as a PlatformIO project.
+3. Build the ESP32 simulation firmware:
+
+   ```sh
+   pio run -e esp32dev
+   ```
+
+4. In VS Code, run **Wokwi: Start Simulator**. The `wokwi.toml` file points
+   Wokwi at the PlatformIO build output. The `sdcard/PRESETS` directory contains
+   synthetic DAT v1 files for the virtual SD card.
+
+The same project can be run with Wokwi CLI after installing/configuring that
+tool; no Wokwi CLI is needed for the PlatformIO build itself.
+
+## Controls
+
+Use the virtual IR remote beside the receiver:
+
+| Remote key | Action |
+| --- | --- |
+| Power | Toggle logical matrix power |
+| `+` / `-` | Brightness up / down |
+| Previous / Next | Previous / next SD preset |
+| `1`, `4`, `3`, `0` | Solid red, green, blue, white |
+| Menu | Open / close menu |
+| `8` / `9` | Navigate up / down |
+| Play | Select / edit |
+| Back | Back / exit |
+
+Click the green Power pushbutton or press **P** in the focused diagram to test
+the physical-button path. The serial monitor reports startup, SD, and NEC
+command messages at 115200 baud.
+
+The virtual SD card is populated from `sdcard/`; its two presets exercise
+versioned DAT parsing, playback, and next/previous selection. Regenerate them
+with `python3 scripts/generate_sd_fixtures.py` if the format fixture changes.
+
+## What this validates
+
+- Shared 8x8 serpentine mapping, RGB brightness scaling, and menu drawing.
+- Shared menu state machine, timeout, animation pause/resume, and control state.
+- Shared DAT parser/player and preset navigation against synthetic SD files.
+- IR protocol decoding and application actions using the simulator's NEC
+  remote commands.
+
+The simulator uses an ESP32-specific NeoPixelBus method and a simulation-only
+pin map. The production firmware remains the separate `nodemcuv2` target; use
+its host tests and PlatformIO CI for ESP8266 code validation, then real hardware
+for final electrical/timing checks.

@@ -51,7 +51,16 @@ private:
 
     uint8_t _brightness;
     uint8_t _sourceRgb[MatrixFormat::kFrameBytes];
+#if defined(ARDUINO_ARCH_ESP8266)
     // ESP8266 DMA ignores the requested pin and outputs on GPIO3. Bit-bang
     // honors GPIO4; its timing/IR limitations are documented in README.md.
-    NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBangWs2812xMethod> _strip;
+    using MatrixPixelMethod = NeoEsp8266BitBangWs2812xMethod;
+#elif defined(ARDUINO_ARCH_ESP32)
+    // The separate Wokwi target exercises shared application/rendering logic
+    // using the ESP32's standard NeoPixelBus method.
+    using MatrixPixelMethod = NeoWs2812xMethod;
+#else
+#error "DisplayController supports ESP8266 firmware and the ESP32 Wokwi target only"
+#endif
+    NeoPixelBus<NeoGrbFeature, MatrixPixelMethod> _strip;
 };
