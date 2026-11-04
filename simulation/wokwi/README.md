@@ -16,8 +16,13 @@ ground, as described in the root README.
 
 ## Run it
 
-1. Install PlatformIO Core and Wokwi for VS Code 4.0.0 or newer (needed for
-   the local `sdcard/` fixture directory).
+1. Install PlatformIO Core plus the Python requirement in this folder, and
+   Wokwi for VS Code 4.0.0 or newer (needed for the local `sdcard/` fixture
+   directory):
+
+   ```sh
+   python -m pip install -r requirements.txt
+   ```
 2. Open this `simulation/wokwi` folder as a PlatformIO project.
 3. Build the ESP32 simulation firmware:
 

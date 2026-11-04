@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <SPI.h>
+#include <SD.h>  // Keep PlatformIO's dependency scanner aware of the shared SD player.
 #include <WiFi.h>
 
 #include "AnimationController.h"
