@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "author": "2D LED Matrix",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 15,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-led-matrix",
+      "id": "matrix",
+      "top": -85,
+      "left": 275,
+      "attrs": { "rows": "8", "cols": "8", "layout": "serpentine", "brightness": "0.8" }
+    },
+    {
+      "type": "wokwi-vcc",
+      "id": "matrix5v",
+      "top": -150,
+      "left": 200,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-ir-receiver",
+      "id": "ir1",
+      "top": 220,
+      "left": 245,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-ir-remote",
+      "id": "remote1",
+      "top": 275,
+      "left": 385,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": 215,
+      "left": -205,
+      "attrs": { "color": "green", "label": "Power", "key": "P" }
+    },
+    {
+      "type": "wokwi-microsd-card",
+      "id": "sd1",
+      "top": 315,
+      "left": 15,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
+    [ "esp:4", "matrix:DIN", "green", [ "h86.4", "v-96" ] ],
+    [ "matrix5v:VCC", "matrix:VDD", "red", [ "h57.6", "v67.2" ] ],
+    [ "matrix:VSS", "esp:GND.1", "black", [ "h-211.2", "v153.6" ] ],
+    [ "ir1:VCC", "esp:3V3", "red", [ "h-201.6", "v-172.8" ] ],
+    [ "ir1:GND", "esp:GND.2", "black", [ "h-230.4", "v-144" ] ],
+    [ "ir1:DAT", "esp:26", "blue", [ "h-163.2", "v-124.8" ] ],
+    [ "btn1:1.l", "esp:25", "green", [ "h144", "v-48" ] ],
+    [ "btn1:2.l", "esp:GND.2", "black", [ "h124.8", "v-19.2" ] ],
+    [ "sd1:VCC", "esp:3V3", "red", [ "h-96", "v-240" ] ],
+    [ "sd1:GND", "esp:GND.3", "black", [ "h-115.2", "v-220.8" ] ],
+    [ "sd1:SCK", "esp:18", "orange", [ "h0", "v-230.4" ] ],
+    [ "sd1:DO", "esp:19", "green", [ "h19.2", "v-211.2" ] ],
+    [ "sd1:DI", "esp:23", "blue", [ "h38.4", "v-192" ] ],
+    [ "sd1:CS", "esp:27", "magenta", [ "h57.6", "v-172.8" ] ]
+  ],
+  "dependencies": {}
+}

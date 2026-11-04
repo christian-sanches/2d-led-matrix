@@ -162,6 +162,11 @@ animation playback.
 
 ## Diagrams and validation status
 
+- [`simulation/wokwi`](simulation/wokwi) is a separate interactive Wokwi project
+  for the menu, matrix, button, IR remote, and SD preset flow. It uses an ESP32
+  compatibility target because Wokwi does not emulate the production ESP8266;
+  it reuses the shared application modules but does not validate ESP8266
+  electrical timing or power behavior. See its README for setup and controls.
 - [`diagram.mermaid`](diagram.mermaid), [`2d-led-matrix.kicad_sch`](2d-led-matrix.kicad_sch),
   and [`kicad_schematic_project.kicad_sch`](kicad_schematic_project.kicad_sch)
   describe the ESP8266 pinout; the KiCad files are draft connector-level guides,
