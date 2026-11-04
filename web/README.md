@@ -34,8 +34,11 @@ Image and text are rasterized at 8×8, so fine details and small lettering may n
 ## Test
 
 ```sh
+npm run typecheck
 npm test
 npm run build
 ```
 
 Tests cover exact DAT v1 header bytes, valid legacy/v1 round trips, invalid versioned and legacy data, RGB row-major layout, alpha compositing, GIF disposal and 30 fps sampling, and text style generation.
+
+GitHub Actions runs the typecheck, Vitest suite, and production build for pull requests and pushes that change `web/` or the web CI workflow.
