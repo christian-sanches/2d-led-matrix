@@ -72,8 +72,15 @@ preset is found, the X remains on the matrix and the serial monitor explains
 why animation playback did not start.
 
 The virtual SD card is populated from `sdcard/`; its two presets exercise
-versioned DAT parsing, playback, and next/previous selection. Regenerate them
-with `python3 scripts/generate_sd_fixtures.py` if the format fixture changes.
+versioned DAT parsing, playback, and next/previous selection:
+
+- `PRESET00.dat` moves an orange bar across the matrix, holding each column for
+  four frames so the motion is easy to follow.
+- `PRESET01.dat` alternates blue and white, holding each color for half a second
+  to make preset changes and color output visible without a rapid strobe.
+
+Regenerate them with `python3 scripts/generate_sd_fixtures.py` if the format
+fixture changes.
 
 ## What this validates
 
