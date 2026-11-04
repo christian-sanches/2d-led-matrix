@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 // The menu deliberately knows neither IR keycodes nor the application state
@@ -25,9 +26,6 @@ public:
     // Palette indices: red, green, blue, yellow, cyan, magenta, white, amber.
     virtual uint8_t solidColorIndex() const = 0;
     virtual void setSolidColorIndex(uint8_t index) = 0;
-
-    virtual bool powerOn() const = 0;
-    virtual void setPowerOn(bool enabled) = 0;
 };
 
 // Thin drawing adapter. A DisplayController wrapper can implement this
@@ -59,40 +57,39 @@ enum class MenuPage : uint8_t {
     Brightness,
     Wifi,
     SolidColor,
-    Fps,
-    Power
+    Fps
 };
 
 enum class MenuUpdateResult : uint8_t {
     NoChange,
     Entered,
     Changed,
-    Exited
+    Exited,
+    Animated
 };
 
 class MenuController {
 public:
-    // Volatile setting ranges: brightness 0..255 by 16, FPS 1..60 by 1,
-    // and an eight-color palette. The default inactivity exit is 7 seconds;
+    // Volatile setting ranges: brightness 0..255 by 16, five FPS presets, and
+    // an eight-color palette. The default inactivity exit is 7 seconds;
     // caller-supplied timeouts are bounded to 5..10 seconds.
-    static const uint8_t MIN_FPS = 1;
+    static const uint8_t MIN_FPS = 15;
     static const uint8_t MAX_FPS = 60;
+    static const uint8_t FPS_PRESET_COUNT = 5;
     static const uint8_t COLOR_COUNT = 8;
     static const uint32_t DEFAULT_TIMEOUT_MS = 7000;
     static const uint32_t MIN_TIMEOUT_MS = 5000;
     static const uint32_t MAX_TIMEOUT_MS = 10000;
     static const uint8_t BRIGHTNESS_STEP = 16;
+    static const uint32_t SCROLL_STEP_MS = 100;
 
     explicit MenuController(MenuActions& actions,
                             uint32_t timeoutMs = DEFAULT_TIMEOUT_MS);
 
-    // MenuInput::Menu opens the menu while inactive, and closes it while
-    // active. At the root, Up/Down selects a page; Select opens brightness/
-    // FPS/color editing or toggles Wi-Fi/power. In color editing, Select
-    // toggles solid mode. In an edit page, Up/Down adjusts its value and Back
-    // returns to the root. Back at the root exits. Call frequently with
-    // millis()-style timestamps; subtraction is rollover-safe. Settings
-    // change immediately through MenuActions and are not persisted here.
+    // MenuInput::Menu opens/closes. At the root, Up/Down selects a page;
+    // Select edits brightness/color, toggles Wi-Fi, or cycles FPS presets.
+    // In color editing, Select toggles solid mode. Back leaves editing or
+    // exits at the root. Labels scroll left-to-right. Settings are volatile.
     MenuUpdateResult update(uint32_t nowMs, MenuInput input = MenuInput::None);
 
     // Reset the inactivity timeout when the application handles another
@@ -108,16 +105,19 @@ public:
     MenuPage page() const { return _page; }
     static const char* pageName(MenuPage page);
 
-    // Fixed palette used for the preview and by the application adapter.
+    // Fixed palette used for color labels and by the application adapter.
     static MenuRgb colorAt(uint8_t index);
 
 private:
     static uint8_t clampFps(uint8_t value);
     static uint8_t clampColorIndex(uint8_t value);
     static uint8_t wrapColorIndex(int16_t value);
+    static uint8_t nextFpsPreset(uint8_t value);
     uint32_t normalizedTimeout(uint32_t value) const;
     void enter(uint32_t nowMs);
     void exit();
+    void resetScroll(uint32_t nowMs);
+    uint8_t formatLabel(char* text, size_t capacity, MenuRgb& color) const;
     MenuUpdateResult handleActiveInput(uint32_t nowMs, MenuInput input);
     MenuUpdateResult adjust(uint8_t direction);
 
@@ -127,4 +127,6 @@ private:
     MenuPage _page;
     bool _active;
     bool _editing;
+    int16_t _scrollX;
+    uint32_t _lastScrollAt;
 };

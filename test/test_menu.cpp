@@ -3,12 +3,13 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 class TestActions : public MenuActions {
 public:
     TestActions()
-        : brightnessValue(0), fpsValue(1), wifi(false), solid(false),
-          color(0), power(true) {}
+        : brightnessValue(0), fpsValue(30), wifi(false), solid(false),
+          color(0) {}
 
     uint8_t brightness() const { return brightnessValue; }
     void setBrightness(uint8_t value) { brightnessValue = value; }
@@ -20,15 +21,11 @@ public:
     void setSolidModeEnabled(bool enabled) { solid = enabled; }
     uint8_t solidColorIndex() const { return color; }
     void setSolidColorIndex(uint8_t index) { color = index; }
-    bool powerOn() const { return power; }
-    void setPowerOn(bool enabled) { power = enabled; }
-
     uint8_t brightnessValue;
     uint8_t fpsValue;
     bool wifi;
     bool solid;
     uint8_t color;
-    bool power;
 };
 
 class TestDisplay : public MenuDisplay {
@@ -63,6 +60,8 @@ int main() {
     assert(menu.update(0, MenuInput::Up) == MenuUpdateResult::NoChange);
     assert(menu.update(1, MenuInput::Menu) == MenuUpdateResult::Entered);
     assert(menu.isActive());
+    assert(menu.page() == MenuPage::Brightness);
+    assert(strcmp(MenuController::pageName(menu.page()), "brightness") == 0);
     menu.render(display);
     assert(display.shows == 1 && display.writes >= 64);
 
@@ -73,9 +72,9 @@ int main() {
     assert(actions.brightnessValue == 255);
     assert(menu.update(30, MenuInput::Select) == MenuUpdateResult::Changed);
 
-    // Root navigation wraps, and Wi-Fi is toggled only through the adapter.
+    // Root navigation wraps across four pages; power is not a menu page.
     assert(menu.update(31, MenuInput::Up) == MenuUpdateResult::Changed);
-    assert(menu.page() == MenuPage::Power);
+    assert(menu.page() == MenuPage::Fps);
     assert(menu.update(32, MenuInput::Down) == MenuUpdateResult::Changed);
     assert(menu.page() == MenuPage::Brightness);
     menu.update(33, MenuInput::Down);
@@ -100,35 +99,40 @@ int main() {
     menu.update(42, MenuInput::Up);
     assert(actions.color == 0); // Palette wraps at the upper edge.
 
-    // FPS is clamped to 1..60.
+    // Select cycles the supported FPS presets: 15, 24, 30, 48, 60.
     menu.update(43, MenuInput::Back);
     menu.update(44, MenuInput::Down); // FPS page, wrapping from SolidColor
     assert(menu.page() == MenuPage::Fps);
-    menu.update(45, MenuInput::Select);
-    menu.update(46, MenuInput::Down);
-    assert(actions.fpsValue == 1);
-    for (uint8_t i = 0; i < 70; ++i) menu.update(47 + i, MenuInput::Up);
-    assert(actions.fpsValue == 60);
+    const uint8_t expectedFps[] = {48, 60, 15, 24, 30};
+    for (uint8_t i = 0; i < sizeof(expectedFps); ++i) {
+        assert(menu.update(45 + i, MenuInput::Select) == MenuUpdateResult::Changed);
+        assert(actions.fpsValue == expectedFps[i]);
+    }
 
-    // Power toggles through the adapter; Back exits and inactive render does
-    // not touch the last rendered matrix buffer.
-    menu.update(120, MenuInput::Back);
-    menu.update(121, MenuInput::Down); // Power
-    menu.update(122, MenuInput::Select);
-    assert(!actions.power);
+    // Back exits and inactive render does not touch the matrix buffer.
     const uint16_t oldWrites = display.writes;
-    assert(menu.update(123, MenuInput::Back) == MenuUpdateResult::Exited);
+    assert(menu.update(120, MenuInput::Back) == MenuUpdateResult::Exited);
     menu.render(display);
     assert(display.writes == oldWrites);
+
+    // The text ticker advances without blocking the application loop.
+    openMenu(menu, 200);
+    assert(menu.update(300, MenuInput::None) == MenuUpdateResult::Animated);
+    assert(menu.update(301, MenuInput::Back) == MenuUpdateResult::Exited);
 
     // Timeout and timestamp wraparound are both supported.
     openMenu(menu, 100);
     menu.noteActivity(6000); // A recognized app action also keeps the menu alive.
-    assert(menu.update(12000, MenuInput::None) == MenuUpdateResult::NoChange);
+    const MenuUpdateResult refreshed = menu.update(12000, MenuInput::None);
+    assert(refreshed == MenuUpdateResult::Animated ||
+           refreshed == MenuUpdateResult::NoChange);
+    assert(menu.isActive());
     assert(menu.update(13000, MenuInput::None) == MenuUpdateResult::Exited);
 
     openMenu(menu, 0xFFFFFF00UL);
-    assert(menu.update(0x00001A57UL) == MenuUpdateResult::NoChange);
+    const MenuUpdateResult wrapped = menu.update(0x00001A57UL, MenuInput::None);
+    assert(wrapped == MenuUpdateResult::Animated || wrapped == MenuUpdateResult::NoChange);
+    assert(menu.isActive());
     assert(menu.update(0x00001A58UL) == MenuUpdateResult::Exited);
 
     puts("MenuController tests passed");

@@ -69,9 +69,6 @@ public:
         });
     }
 
-    bool powerOn() const { return _controls.isPowered(); }
-    void setPowerOn(bool enabled) { _controls.setPowered(enabled); }
-
 private:
     ControlState& _controls;
     DisplayController& _display;

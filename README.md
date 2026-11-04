@@ -122,22 +122,27 @@ rejected; it is never retried as legacy data. Legacy playback remains supported.
   these codes distinct from the application-action codes. No remote key values
   are assumed by the firmware. The physical button remains a short-press
   logical power toggle; it is not a menu key and has no long-press behavior.
-- While the menu is open, Up/Down browses the icon pages (brightness, Wi-Fi,
-  solid color, FPS, power). Select enters brightness/FPS/color editing or
-  toggles Wi-Fi/power. In color editing, Up/Down changes the preview palette
-  (red, green, blue, yellow, cyan, magenta, white, amber) and Select toggles
-  solid-color mode. Back returns from editing or exits at the root; Menu also
-  exits. With no input, the menu exits after 7 seconds (bounded to 5–10 seconds
-  by the module) and restores the current content. Animation advancement pauses
-  while the overlay is open and resumes from its retained player state. Any
-  recognized app control or button action while the menu is open also resets
-  the inactivity timer. The serial monitor prints the current page name when
-  the menu changes.
-- Menu brightness (0–255), FPS (1–60), palette selection, mode, power, and
-  Wi-Fi radio state are volatile; none are written to flash or SD. Brightness
-  changes in 16-point steps. Wi-Fi enable selects station radio mode and
-  explicitly disconnects; it does not connect to an AP or start an AP, server,
-  or provisioning flow. Wi-Fi defaults off at startup.
+- The menu has four pages in this order: brightness, Wi-Fi, solid color, and
+  FPS. Each page scrolls a readable 3×5-font label (uppercase letters, digits,
+  and basic symbols) from left to right; the serial monitor also prints the page
+  name. Brightness is shown as a percentage. The remaining row shows a
+  brightness or FPS bar, Wi-Fi status, or the selected color swatch.
+- Select enters brightness/color editing; Up/Down changes brightness in
+  16-point steps or cycles the eight-color palette (red, green, blue, yellow,
+  cyan, magenta, white, amber). Select in color editing toggles solid mode.
+  Select on Wi-Fi toggles the radio. **Each Select click on the FPS page cycles
+  15 → 24 → 30 → 48 → 60 → 15 FPS**, and the numeric value scrolls across the
+  matrix. Back leaves editing or exits at the root; Menu also exits. Power is
+  intentionally not a menu page: the physical button and mapped IR power
+  action still control it.
+- Settings are volatile; none are written to flash or SD. Wi-Fi enable selects
+  station radio mode and explicitly disconnects; it does not connect to an AP
+  or start an AP, server, or provisioning flow. Wi-Fi defaults off at startup.
+- With no input, the menu exits after 7 seconds (bounded to 5–10 seconds by the
+  module) and restores the current content. Animation advancement pauses while
+  the overlay is open and resumes from its retained player state. A recognized
+  app control or button action while the menu is open also resets the inactivity
+  timer.
 - Startup brightness is limited to 96/255 to reduce initial load; adjust the
   external supply and increase brightness only after verifying the matrix's
   power/current specification.
