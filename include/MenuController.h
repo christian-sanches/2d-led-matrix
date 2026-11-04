@@ -1,0 +1,116 @@
+#pragma once
+
+#include <stdint.h>
+
+// The menu deliberately knows neither IR keycodes nor the application state
+// implementation. The main loop maps configured remote keys to MenuInput and
+// implements MenuActions using the application's shared state/actions.
+class MenuActions {
+public:
+    virtual ~MenuActions() {}
+
+    virtual uint8_t brightness() const = 0;
+    virtual void setBrightness(uint8_t value) = 0;
+
+    virtual uint8_t fps() const = 0;
+    virtual void setFps(uint8_t value) = 0;
+
+    // The adapter controls the radio only; server/AP/provisioning behavior is
+    // outside the menu.
+    virtual bool wifiEnabled() const = 0;
+    virtual void setWifiEnabled(bool enabled) = 0;
+
+    virtual bool solidModeEnabled() const = 0;
+    virtual void setSolidModeEnabled(bool enabled) = 0;
+    // Palette indices: red, green, blue, yellow, cyan, magenta, white, amber.
+    virtual uint8_t solidColorIndex() const = 0;
+    virtual void setSolidColorIndex(uint8_t index) = 0;
+
+    virtual bool powerOn() const = 0;
+    virtual void setPowerOn(bool enabled) = 0;
+};
+
+// Thin drawing adapter. A DisplayController wrapper can implement this
+// without making this module depend on M1's final display API.
+class MenuDisplay {
+public:
+    virtual ~MenuDisplay() {}
+    virtual void setPixel(uint8_t x, uint8_t y,
+                          uint8_t red, uint8_t green, uint8_t blue) = 0;
+    virtual void show() = 0;
+};
+
+enum class MenuInput : uint8_t {
+    None,
+    Up,
+    Down,
+    Select,
+    Back,
+    Menu
+};
+
+enum class MenuPage : uint8_t {
+    Brightness,
+    Wifi,
+    SolidColor,
+    Fps,
+    Power
+};
+
+enum class MenuUpdateResult : uint8_t {
+    NoChange,
+    Entered,
+    Changed,
+    Exited
+};
+
+class MenuController {
+public:
+    // Volatile setting ranges: brightness 0..255 by 16, FPS 1..60 by 1,
+    // and an eight-color palette. The default inactivity exit is 7 seconds;
+    // caller-supplied timeouts are bounded to 5..10 seconds.
+    static const uint8_t MIN_FPS = 1;
+    static const uint8_t MAX_FPS = 60;
+    static const uint8_t COLOR_COUNT = 8;
+    static const uint32_t DEFAULT_TIMEOUT_MS = 7000;
+    static const uint32_t MIN_TIMEOUT_MS = 5000;
+    static const uint32_t MAX_TIMEOUT_MS = 10000;
+    static const uint8_t BRIGHTNESS_STEP = 16;
+
+    explicit MenuController(MenuActions& actions,
+                            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS);
+
+// MenuInput::Menu opens the menu while inactive, and closes it while active.
+// At the root, Up/Down selects a page; Select opens brightness/FPS/color
+// editing, toggles Wi-Fi/power, or (on the color page) toggles solid mode
+// while editing. In an edit page, Up/Down adjusts its value and Back returns
+// to the root. Back at the root exits. Call frequently with millis()-style
+// timestamps; subtraction is rollover-safe. Settings change immediately
+// through MenuActions and are intentionally not persisted here.
+    MenuUpdateResult update(uint32_t nowMs, MenuInput input = MenuInput::None);
+
+    // Draws only while active. It never clears or changes the display while
+    // inactive, allowing the caller to resume normal content rendering.
+    void render(MenuDisplay& display) const;
+
+    bool isActive() const { return _active; }
+    bool isEditing() const { return _editing; }
+    MenuPage page() const { return _page; }
+
+private:
+    static uint8_t clampFps(uint8_t value);
+    static uint8_t clampColorIndex(uint8_t value);
+    static uint8_t wrapColorIndex(int16_t value);
+    uint32_t normalizedTimeout(uint32_t value) const;
+    void enter(uint32_t nowMs);
+    void exit();
+    MenuUpdateResult handleActiveInput(uint32_t nowMs, MenuInput input);
+    MenuUpdateResult adjust(uint8_t direction);
+
+    MenuActions& _actions;
+    uint32_t _timeoutMs;
+    uint32_t _lastActivityMs;
+    MenuPage _page;
+    bool _active;
+    bool _editing;
+};
