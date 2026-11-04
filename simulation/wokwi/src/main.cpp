@@ -130,6 +130,19 @@ void renderSolidColor() {
     display.fill(color.red, color.green, color.blue);
 }
 
+void renderDiagnosticPattern() {
+    display.clear();
+    for (uint8_t y = 0; y < MatrixFormat::kHeight; ++y) {
+        for (uint8_t x = 0; x < MatrixFormat::kWidth; ++x) {
+            if (x == y) display.setPixel(x, y, 255, 0, 0);
+            else if (x + y == MatrixFormat::kWidth - 1) {
+                display.setPixel(x, y, 0, 80, 255);
+            }
+        }
+    }
+    display.show();
+}
+
 void renderStoredMode() {
     if (!controls.isPowered()) return;
     if (controls.mode() == DisplayMode::Solid) {
@@ -196,12 +209,14 @@ void setup() {
     SPI.begin(PIN_SD_SCK, PIN_SD_MISO, PIN_SD_MOSI, PIN_SD_CS);
     display.begin();
     display.setBrightness(controls.brightness());
+    renderDiagnosticPattern();
+    delay(700);
     menuActions.begin();
     ir.begin();
 
     if (!animation.begin()) {
-        Serial.println(F("No playable preset on simulated SD; continuing without animation."));
-        display.clear();
+        Serial.println(F("No playable preset on simulated SD; keeping diagnostic pattern."));
+        renderDiagnosticPattern();
     } else {
         animationFramePending = true;
         renderStoredMode();

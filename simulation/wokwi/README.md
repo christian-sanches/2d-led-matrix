@@ -61,6 +61,10 @@ Click the green Power pushbutton or press **P** in the focused diagram to test
 the physical-button path. The serial monitor reports startup, SD, and NEC
 command messages at 115200 baud.
 
+On boot, a red/blue X is shown briefly as a matrix-output check. If no SD
+preset is found, the X remains on the matrix and the serial monitor explains
+why animation playback did not start.
+
 The virtual SD card is populated from `sdcard/`; its two presets exercise
 versioned DAT parsing, playback, and next/previous selection. Regenerate them
 with `python3 scripts/generate_sd_fixtures.py` if the format fixture changes.
