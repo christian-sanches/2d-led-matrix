@@ -99,11 +99,15 @@ bool animationFramePending = false;
 
 // These are NEC command bytes emitted by Wokwi's virtual remote. They are
 // intentionally separate from the user's real-remote keymap.
-MenuInput menuInputForRemote(uint32_t command) {
+MenuInput menuInputForRemote(uint32_t command, bool menuActive) {
+    if (command == 0xE2) return MenuInput::Menu; // Menu opens/closes at any time.
+    if (!menuActive) return MenuInput::None;
+
     switch (command) {
-    case 0xE2: return MenuInput::Menu;   // Menu
-    case 0x4A: return MenuInput::Up;     // 8
-    case 0x52: return MenuInput::Down;   // 9
+    case 0xE0: return MenuInput::Up;     // Previous
+    case 0x90: return MenuInput::Down;   // Next
+    case 0x4A: return MenuInput::Up;     // 8, alternate navigation
+    case 0x52: return MenuInput::Down;   // 9, alternate navigation
     case 0xA8: return MenuInput::Select; // Play
     case 0xC2: return MenuInput::Back;   // Back
     default: return MenuInput::None;
@@ -232,6 +236,7 @@ void loop() {
 
     if (button.update(digitalRead(PIN_BTN) == HIGH, now)) {
         dispatch(ControlAction::PowerToggle);
+        menu.noteActivity(now);
         stateChanged = true;
     }
 
@@ -240,11 +245,12 @@ void loop() {
         const uint32_t command = ir.getDecodedCommand();
         Serial.print(F("Wokwi NEC command: 0x"));
         Serial.println(command, HEX);
-        menuInput = menuInputForRemote(command);
+        menuInput = menuInputForRemote(command, menu.isActive());
         if (menuInput == MenuInput::None) {
             const ControlAction action = actionForRemote(command);
             if (action != ControlAction::None) {
                 dispatch(action);
+                menu.noteActivity(now);
                 stateChanged = true;
             }
         }
@@ -253,6 +259,13 @@ void loop() {
 
     const MenuUpdateResult menuResult = menu.update(now, menuInput);
     if (menuResult != MenuUpdateResult::NoChange) stateChanged = true;
+    if (menuResult == MenuUpdateResult::Entered ||
+        menuResult == MenuUpdateResult::Changed) {
+        Serial.print(F("Menu page: "));
+        Serial.println(MenuController::pageName(menu.page()));
+    } else if (menuResult == MenuUpdateResult::Exited) {
+        Serial.println(F("Menu closed."));
+    }
 
     const bool powered = controls.isPowered();
     if (!powered) {
