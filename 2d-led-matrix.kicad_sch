@@ -529,7 +529,7 @@
     (effects (font (size 1.27 1.27)) (justify left))
     (uuid "00000000-0000-0000-0000-000000000307")
   )
-  (text "2D LED Matrix Controller\n\nESP32 Pin Assignments:\nDIN  -> GPIO9\nBTN  -> GPIO8\nIR_OUT -> GPIO3\nSD_CS  -> GPIO4\nSD_SCK -> GPIO5\nSD_MOSI -> GPIO7\nSD_MISO -> GPIO6"
+  (text "2D LED Matrix Controller — ESP8266 NodeMCU connector pinout (draft)\n\nLED DIN <- GPIO4 / D2 (use level shifter recommended)\nPower button -> GPIO5 / D1 to GND\nIR receiver OUT -> GPIO0 / D3 (boot-strap pin; idle HIGH)\nSD CS -> GPIO15 / D8\nSD SCK <- GPIO14 / D5\nSD MOSI <- GPIO13 / D7\nSD MISO -> GPIO12 / D6\n\nNot an ERC-checked or hardware-verified schematic. Power the matrix from an external supply matched to its exact voltage/current; common ground is required. Do not power the matrix from 3.3V."
     (at 127 88.9 0)
     (effects (font (size 1.27 1.27)) (justify left top))
     (uuid "00000000-0000-0000-0000-000000000401")

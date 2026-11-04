@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "author": "Anonymous maker",
+  "author": "LEGACY ESP32 simulation only — not the production ESP8266 pinout",
   "editor": "wokwi",
   "parts": [
     { "type": "board-esp32-devkit-v1", "id": "esp", "top": 0, "left": 0, "attrs": {} },

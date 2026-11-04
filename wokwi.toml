@@ -1,5 +1,6 @@
 [wokwi]
 version = 1
+# Legacy ESP32 mockup only. Firmware target is ESP8266 NodeMCU (nodemcuv2).
 elf = ".pio/build/esp32/firmware.elf"
 firmware = ".pio/build/esp32/firmware.bin"
 
