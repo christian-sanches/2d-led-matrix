@@ -2,7 +2,8 @@
 
 Firmware for a fixed 8×8 RGB matrix driven by an ESP8266 NodeMCU, a MicroSD
 module, an IR receiver, and one active-low power button. The firmware target is
-**PlatformIO `nodemcuv2` / ESP8266**. No physical validation is claimed yet.
+**PlatformIO `nodemcuv2` / ESP8266**. Wi-Fi is only an optional menu-controlled
+radio toggle; no network service is started. No physical validation is claimed.
 
 ## Pinout
 
@@ -53,8 +54,10 @@ DMA method ignores the requested pin and transmits on GPIO3/RX. Bit-bang is the
 NeoPixelBus method that honors GPIO4, but it is timing-sensitive and is not the
 recommended ESP8266 hardware method. It occupies roughly 1.9 ms to transmit 64
 pixels and may mask IR receiver edges during that interval; IR reception and
-pixel signal integrity must be checked on the actual hardware. Wi-Fi is not
-used. Do not treat compile success as electrical or timing validation.
+pixel signal integrity must be checked on the actual hardware. Wi-Fi remains
+off unless deliberately enabled from the menu, which only enables station radio
+mode and immediately disconnects. Do not treat compile success as electrical
+or timing validation.
 
 ## SD preset files
 
@@ -62,7 +65,8 @@ Place valid files directly in `/PRESETS` on the SD card (FAT filesystem). The
 firmware discovers `.dat` files, rejects invalid files, sorts valid paths in
 bytewise filename order, and cycles through that order. At most 32 valid
 presets are retained; full paths must fit in 63 bytes (54 filename bytes after
-`/PRESETS/`). Playback is 30 FPS; DAT v1 has no per-frame timing.
+`/PRESETS/`). Playback starts at 30 FPS and is menu-adjustable from 1–60 FPS;
+DAT v1 has no per-frame timing.
 
 Each frame is exactly 192 bytes: 64 row-major RGB888 pixels, starting at the
 logical top-left and proceeding across each row to the bottom-right. Serpentine
@@ -99,8 +103,9 @@ rejected; it is never retried as legacy data. Legacy playback remains supported.
   does not disconnect supply power.
 - IR actions support power toggle, brightness up/down, previous/next preset,
   and solid red/green/blue/white. Solid mode stays selected until previous or
-  next preset is requested. Brightness changes scale the original RGB values,
-  so successive adjustments do not compound rounding.
+  next preset is requested, or it is disabled from the menu. Brightness changes
+  scale the original RGB values, so successive adjustments do not compound
+  rounding.
 - NEC button codes are remote-specific and **not known or hardware-verified**.
   The default map is deliberately disabled (all values zero), rather than
   guessing codes. Open the serial monitor at 115200 baud and press remote keys;
@@ -109,13 +114,36 @@ rejected; it is never retried as legacy data. Legacy playback remains supported.
   in `include/IRKeymap.h` (as `0x...ULL`); use unique values. After rebuilding,
   verify every mapped action with the actual remote. Protocol id is diagnostic;
   this keymap currently compares full decoded values.
+- The 8×8 menu uses a separate set of configurable NEC codes in
+  `include/IRKeymap.h`: `IR_COMMAND_MENU`, `IR_COMMAND_MENU_UP`,
+  `IR_COMMAND_MENU_DOWN`, `IR_COMMAND_MENU_SELECT`, and
+  `IR_COMMAND_MENU_BACK`. They are all zero/disabled by default. Capture the
+  actual full values as above, assign each a unique `0x...ULL` value, and keep
+  these codes distinct from the application-action codes. No remote key values
+  are assumed by the firmware. The physical button remains a short-press
+  logical power toggle; it is not a menu key and has no long-press behavior.
+- While the menu is open, Up/Down browses the icon pages (brightness, Wi-Fi,
+  solid color, FPS, power). Select enters brightness/FPS/color editing or
+  toggles Wi-Fi/power. In color editing, Up/Down changes the preview palette
+  (red, green, blue, yellow, cyan, magenta, white, amber) and Select toggles
+  solid-color mode. Back returns from editing or exits at the root; Menu also
+  exits. With no input, the menu exits after 7 seconds (bounded to 5–10 seconds
+  by the module) and restores the current content. Animation advancement pauses
+  while the overlay is open and resumes from its retained player state.
+- Menu brightness (0–255), FPS (1–60), palette selection, mode, power, and
+  Wi-Fi radio state are volatile; none are written to flash or SD. Brightness
+  changes in 16-point steps. Wi-Fi enable selects station radio mode and
+  explicitly disconnects; it does not connect to an AP or start an AP, server,
+  or provisioning flow. Wi-Fi defaults off at startup.
 - Startup brightness is limited to 96/255 to reduce initial load; adjust the
   external supply and increase brightness only after verifying the matrix's
   power/current specification.
 
 IR is polled while the logical power is off, so a mapped power command can wake
-the matrix. Because LED data output can briefly block interrupts on ESP8266,
-verify the IR receiver still decodes reliably during animation playback.
+the matrix; menu navigation remains processable while off, though it is not
+visible until power is restored. Because LED data output can briefly block
+interrupts on ESP8266, verify the IR receiver still decodes reliably during
+animation playback.
 
 ## Diagrams and validation status
 
@@ -141,8 +169,9 @@ pio run -e nodemcuv2
 
 The host tests cover all 64 unique serpentine indices, logical RGB placement,
 legacy and v1 parsing/rejections, overflow checks, frame-loop offsets, control
-state/brightness/solid mode, IR mapping, and button debounce. They do not run
-Arduino/SD/display/IR hardware integration.
+state/brightness/solid mode, application and menu IR mapping, button debounce,
+and menu navigation/settings/timeout/rendering. They do not run Arduino/SD/
+display/IR/Wi-Fi hardware integration.
 
 ### Hands-on validation still required
 
@@ -154,7 +183,11 @@ Arduino/SD/display/IR hardware integration.
 - Test SD initialization, malformed-file rejection, preset ordering and
   previous/next on the target card/module.
 - Capture the actual remote NEC values, configure the keymap, then verify all
-  actions, power-off wake, and IR reliability while frames are transmitting.
+  actions, menu navigation, power-off wake, and IR reliability while frames
+  are transmitting.
+- Verify menu brightness and FPS effects, solid-color preview/resume, menu
+  power behavior, and Wi-Fi radio-only toggling without AP association or
+  network services.
 - Confirm button behavior and debounce with the physical switch.
 
 Until these are performed, hardware compatibility and runtime behavior remain

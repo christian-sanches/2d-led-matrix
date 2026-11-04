@@ -53,6 +53,12 @@ int main() {
     TestActions actions;
     TestDisplay display;
     MenuController menu(actions);
+    const MenuRgb firstColor = MenuController::colorAt(0);
+    const MenuRgb fallbackColor = MenuController::colorAt(255);
+    assert(firstColor.red == 255 && firstColor.green == 0 && firstColor.blue == 0);
+    assert(fallbackColor.red == firstColor.red &&
+           fallbackColor.green == firstColor.green &&
+           fallbackColor.blue == firstColor.blue);
 
     assert(menu.update(0, MenuInput::Up) == MenuUpdateResult::NoChange);
     assert(menu.update(1, MenuInput::Menu) == MenuUpdateResult::Entered);

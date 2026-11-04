@@ -2,18 +2,12 @@
 
 namespace {
 
-struct Rgb {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-};
-
-const Rgb UI_COLOR = {0, 180, 255};
-const Rgb ON_COLOR = {0, 220, 40};
-const Rgb OFF_COLOR = {255, 24, 0};
-const Rgb MARKER_COLOR = {255, 255, 255};
-const Rgb BLACK_COLOR = {0, 0, 0};
-const Rgb PALETTE[MenuController::COLOR_COUNT] = {
+const MenuRgb UI_COLOR = {0, 180, 255};
+const MenuRgb ON_COLOR = {0, 220, 40};
+const MenuRgb OFF_COLOR = {255, 24, 0};
+const MenuRgb MARKER_COLOR = {255, 255, 255};
+const MenuRgb BLACK_COLOR = {0, 0, 0};
+const MenuRgb PALETTE[MenuController::COLOR_COUNT] = {
     {255, 0, 0},       // red
     {0, 255, 0},       // green
     {0, 0, 255},       // blue
@@ -24,12 +18,12 @@ const Rgb PALETTE[MenuController::COLOR_COUNT] = {
     {255, 96, 0}       // amber
 };
 
-void pixel(MenuDisplay& display, uint8_t x, uint8_t y, const Rgb& color) {
+void pixel(MenuDisplay& display, uint8_t x, uint8_t y, const MenuRgb& color) {
     display.setPixel(x, y, color.red, color.green, color.blue);
 }
 
 void drawRow(MenuDisplay& display, uint8_t y, uint8_t bits,
-             const Rgb& color) {
+             const MenuRgb& color) {
     for (uint8_t x = 0; x < 8; ++x) {
         if (bits & (uint8_t)(0x80U >> x)) pixel(display, x, y, color);
     }
@@ -61,14 +55,14 @@ void drawWifi(MenuDisplay& display, bool enabled) {
     }
 }
 
-uint8_t colorContrast(const Rgb& color) {
+uint8_t colorContrast(const MenuRgb& color) {
     const uint16_t luminance = (uint16_t)color.red * 30U +
                                (uint16_t)color.green * 59U +
                                (uint16_t)color.blue * 11U;
     return luminance > 12750U ? 0 : 1;
 }
 
-void drawSolidColor(MenuDisplay& display, const Rgb& color,
+void drawSolidColor(MenuDisplay& display, const MenuRgb& color,
                     uint8_t colorIndex, bool solidMode, bool editing) {
     // Seven rows are a full-matrix color preview. The top row carries a
     // three-bit palette index plus mode/edit markers in a contrasting color.
@@ -76,7 +70,7 @@ void drawSolidColor(MenuDisplay& display, const Rgb& color,
         for (uint8_t x = 0; x < 8; ++x) pixel(display, x, y, color);
     }
 
-    const Rgb marker = colorContrast(color) ? MARKER_COLOR : BLACK_COLOR;
+    const MenuRgb marker = colorContrast(color) ? MARKER_COLOR : BLACK_COLOR;
     for (uint8_t bit = 0; bit < 3; ++bit) {
         if (colorIndex & (uint8_t)(1U << (2U - bit))) {
             pixel(display, bit, 0, marker);
@@ -150,6 +144,10 @@ uint8_t MenuController::wrapColorIndex(int16_t value) {
     if (value < 0) return COLOR_COUNT - 1;
     if (value >= COLOR_COUNT) return 0;
     return (uint8_t)value;
+}
+
+MenuRgb MenuController::colorAt(uint8_t index) {
+    return PALETTE[clampColorIndex(index)];
 }
 
 uint32_t MenuController::normalizedTimeout(uint32_t value) const {
@@ -300,7 +298,7 @@ void MenuController::render(MenuDisplay& display) const {
         break;
     case MenuPage::SolidColor: {
         const uint8_t index = clampColorIndex(_actions.solidColorIndex());
-        drawSolidColor(display, PALETTE[index], index,
+        drawSolidColor(display, colorAt(index), index,
                        _actions.solidModeEnabled(), _editing);
         break;
     }

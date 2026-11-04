@@ -7,6 +7,11 @@
 #define IR_COMMAND_BRIGHTNESS_UP 0x20DF40BFULL
 #define IR_COMMAND_NEXT 0x20DF02FDULL
 #define IR_COMMAND_SOLID_RED 0x20DF1AE5ULL
+#define IR_COMMAND_MENU 0xA000000000000001ULL
+#define IR_COMMAND_MENU_UP 0xA000000000000002ULL
+#define IR_COMMAND_MENU_DOWN 0xA000000000000003ULL
+#define IR_COMMAND_MENU_SELECT 0xA000000000000004ULL
+#define IR_COMMAND_MENU_BACK 0xA000000000000005ULL
 #include "ButtonDebouncer.h"
 #include "ControlState.h"
 #include "IRKeymap.h"
@@ -134,6 +139,7 @@ void testControlsAndBrightness() {
     assert(state.isPowered());
     assert(state.brightness() == 96);
     assert(state.mode() == DisplayMode::Animation);
+    assert(state.solidColorIndex() == 6);
     state.apply(ControlAction::BrightnessDown);
     assert(state.brightness() == 64);
     state.apply(ControlAction::BrightnessUp);
@@ -149,6 +155,7 @@ void testControlsAndBrightness() {
 
     state.apply(ControlAction::SolidRed);
     assert(state.mode() == DisplayMode::Solid);
+    assert(state.solidColorIndex() == 0);
     RgbColorValue color = state.solidColor();
     assert(color.red == 255 && color.green == 0 && color.blue == 0);
     state.apply(ControlAction::BrightnessDown);
@@ -159,7 +166,8 @@ void testControlsAndBrightness() {
     assert(state.isPowered());
     state.apply(ControlAction::SolidBlue);
     color = state.solidColor();
-    assert(state.mode() == DisplayMode::Solid && color.blue == 255 && color.red == 0);
+    assert(state.mode() == DisplayMode::Solid && state.solidColorIndex() == 2 &&
+           color.blue == 255 && color.red == 0);
     state.apply(ControlAction::NextPreset);
     assert(state.mode() == DisplayMode::Animation);
     state.apply(ControlAction::SolidWhite);
@@ -175,6 +183,17 @@ void testIrActionMapping() {
     assert(actionForIrCommand(0x20DF02FDULL) == ControlAction::NextPreset);
     assert(actionForIrCommand(0x20DF1AE5ULL) == ControlAction::SolidRed);
     assert(actionForIrCommand(0xDEADBEEFULL) == ControlAction::None);
+}
+
+void testMenuIrMapping() {
+    assert(menuInputForIrCommand(0) == MenuInput::None);
+    assert(menuInputForIrCommand(IR_COMMAND_MENU) == MenuInput::Menu);
+    assert(menuInputForIrCommand(IR_COMMAND_MENU_UP) == MenuInput::Up);
+    assert(menuInputForIrCommand(IR_COMMAND_MENU_DOWN) == MenuInput::Down);
+    assert(menuInputForIrCommand(IR_COMMAND_MENU_SELECT) == MenuInput::Select);
+    assert(menuInputForIrCommand(IR_COMMAND_MENU_BACK) == MenuInput::Back);
+    assert(menuInputForIrCommand(IR_COMMAND_POWER) == MenuInput::None);
+    assert(actionForIrCommand(IR_COMMAND_MENU) == ControlAction::None);
 }
 
 void testButtonDebounce() {
@@ -206,6 +225,7 @@ int main() {
     testVersionedDatParsingAndRejection();
     testControlsAndBrightness();
     testIrActionMapping();
+    testMenuIrMapping();
     testButtonDebounce();
     puts("All host tests passed.");
     return 0;

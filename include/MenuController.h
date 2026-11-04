@@ -40,6 +40,12 @@ public:
     virtual void show() = 0;
 };
 
+struct MenuRgb {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+};
+
 enum class MenuInput : uint8_t {
     None,
     Up,
@@ -80,13 +86,13 @@ public:
     explicit MenuController(MenuActions& actions,
                             uint32_t timeoutMs = DEFAULT_TIMEOUT_MS);
 
-// MenuInput::Menu opens the menu while inactive, and closes it while active.
-// At the root, Up/Down selects a page; Select opens brightness/FPS/color
-// editing, toggles Wi-Fi/power, or (on the color page) toggles solid mode
-// while editing. In an edit page, Up/Down adjusts its value and Back returns
-// to the root. Back at the root exits. Call frequently with millis()-style
-// timestamps; subtraction is rollover-safe. Settings change immediately
-// through MenuActions and are intentionally not persisted here.
+    // MenuInput::Menu opens the menu while inactive, and closes it while
+    // active. At the root, Up/Down selects a page; Select opens brightness/
+    // FPS/color editing or toggles Wi-Fi/power. In color editing, Select
+    // toggles solid mode. In an edit page, Up/Down adjusts its value and Back
+    // returns to the root. Back at the root exits. Call frequently with
+    // millis()-style timestamps; subtraction is rollover-safe. Settings
+    // change immediately through MenuActions and are not persisted here.
     MenuUpdateResult update(uint32_t nowMs, MenuInput input = MenuInput::None);
 
     // Draws only while active. It never clears or changes the display while
@@ -96,6 +102,9 @@ public:
     bool isActive() const { return _active; }
     bool isEditing() const { return _editing; }
     MenuPage page() const { return _page; }
+
+    // Fixed palette used for the preview and by the application adapter.
+    static MenuRgb colorAt(uint8_t index);
 
 private:
     static uint8_t clampFps(uint8_t value);
