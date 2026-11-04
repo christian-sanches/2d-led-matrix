@@ -34,6 +34,11 @@ ground, as described in the root README.
    Wokwi at the PlatformIO build output. The `sdcard/PRESETS` directory contains
    synthetic DAT v1 files for the virtual SD card.
 
+Open this folder itself as the VS Code workspace. If you keep the repository
+root open, run **Wokwi: Select Config File** and choose
+`simulation/wokwi/wokwi.toml`; the root `wokwi.toml` is an older mockup and
+points to `.pio/build/esp32/`, not this target's `.pio/build/esp32dev/`.
+
 The same project can be run with Wokwi CLI after installing/configuring that
 tool; no Wokwi CLI is needed for the PlatformIO build itself.
 
