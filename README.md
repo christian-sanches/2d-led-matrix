@@ -124,7 +124,7 @@ rejected; it is never retried as legacy data. Legacy playback remains supported.
   logical power toggle; it is not a menu key and has no long-press behavior.
 - The menu has four pages in this order: brightness, Wi-Fi, solid color, and
   FPS. Each page scrolls a readable 3×5-font label (uppercase letters, digits,
-  and basic symbols) from left to right; the serial monitor also prints the page
+  and basic symbols) from right to left in normal reading order; the serial monitor also prints the page
   name. Brightness is shown as a percentage. The remaining row shows a
   brightness or FPS bar, Wi-Fi status, or the selected color swatch.
 - Select enters brightness/color editing; Up/Down changes brightness in

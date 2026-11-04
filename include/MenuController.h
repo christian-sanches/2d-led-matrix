@@ -89,7 +89,8 @@ public:
     // MenuInput::Menu opens/closes. At the root, Up/Down selects a page;
     // Select edits brightness/color, toggles Wi-Fi, or cycles FPS presets.
     // In color editing, Select toggles solid mode. Back leaves editing or
-    // exits at the root. Labels scroll left-to-right. Settings are volatile.
+    // exits at the root. Labels scroll right-to-left in reading order.
+    // Settings are volatile.
     MenuUpdateResult update(uint32_t nowMs, MenuInput input = MenuInput::None);
 
     // Reset the inactivity timeout when the application handles another

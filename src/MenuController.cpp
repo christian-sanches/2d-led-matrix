@@ -195,7 +195,7 @@ uint8_t MenuController::formatLabel(char* text, size_t capacity,
 }
 
 void MenuController::resetScroll(uint32_t nowMs) {
-    _scrollX = 0;
+    _scrollX = 8;
     _lastScrollAt = nowMs;
 }
 
@@ -238,8 +238,8 @@ MenuUpdateResult MenuController::update(uint32_t nowMs, MenuInput input) {
         MenuRgb color = UI_COLOR;
         const uint8_t length = formatLabel(text, sizeof(text), color);
         const int16_t textWidth = static_cast<int16_t>(length * 4U);
-        ++_scrollX;
-        if (textWidth > 0 && _scrollX >= textWidth) _scrollX = 0;
+        --_scrollX;
+        if (textWidth > 0 && _scrollX < 2 - textWidth) _scrollX = 8;
         _lastScrollAt = nowMs;
         return MenuUpdateResult::Animated;
     }
@@ -347,10 +347,8 @@ void MenuController::render(MenuDisplay& display) const {
 
     char text[24];
     MenuRgb color = UI_COLOR;
-    const uint8_t length = formatLabel(text, sizeof(text), color);
-    const int16_t textWidth = static_cast<int16_t>(length * 4U);
+    formatLabel(text, sizeof(text), color);
     drawText(display, _scrollX, text, color);
-    if (textWidth > 0) drawText(display, _scrollX - textWidth, text, color);
 
     switch (_page) {
     case MenuPage::Brightness: {
