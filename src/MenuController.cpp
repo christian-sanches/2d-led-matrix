@@ -110,7 +110,11 @@ MenuController::MenuController(MenuActions& actions, uint32_t timeoutMs)
       _active(false),
       _editing(false),
       _scrollX(0),
-      _lastScrollAt(0) {}
+      _valueScrollX(0),
+      _lastScrollAt(0),
+      _lastValueChangeMs(0),
+      _showingValue(false),
+      _valueModeOnly(false) {}
 
 uint8_t MenuController::clampFps(uint8_t value) {
     for (uint8_t i = 0; i < FPS_PRESET_COUNT; ++i) {
@@ -194,9 +198,92 @@ uint8_t MenuController::formatLabel(char* text, size_t capacity,
     return static_cast<uint8_t>(written);
 }
 
+uint8_t MenuController::formatValueLabel(char* text, size_t capacity,
+                                         MenuRgb& color) const {
+    if (capacity == 0) return 0;
+    int written = 0;
+    switch (_page) {
+    case MenuPage::Brightness: {
+        const unsigned percent =
+            (static_cast<unsigned>(_actions.brightness()) * 100U + 127U) / 255U;
+        color = UI_COLOR;
+        written = snprintf(text, capacity, "%u", percent);
+        break;
+    }
+    case MenuPage::Wifi:
+        color = _actions.wifiEnabled() ? ON_COLOR : OFF_COLOR;
+        written = snprintf(text, capacity, "%s",
+                           _actions.wifiEnabled() ? "ON" : "OFF");
+        break;
+    case MenuPage::SolidColor:
+        if (_valueModeOnly) {
+            color = _actions.solidModeEnabled() ? ON_COLOR : OFF_COLOR;
+            written = snprintf(text, capacity, "%s",
+                               _actions.solidModeEnabled() ? "SOLID" : "ANIM");
+        } else {
+            const uint8_t index = clampColorIndex(_actions.solidColorIndex());
+            color = PALETTE[index];
+            written = snprintf(text, capacity, "%s", COLOR_NAMES[index]);
+        }
+        break;
+    case MenuPage::Fps:
+        color = UI_COLOR;
+        written = snprintf(text, capacity, "%u",
+                           static_cast<unsigned>(clampFps(_actions.fps())));
+        break;
+    }
+    if (written < 0) {
+        text[0] = '\0';
+        return 0;
+    }
+    if (static_cast<size_t>(written) >= capacity) written = static_cast<int>(capacity - 1);
+    return static_cast<uint8_t>(written);
+}
+
 void MenuController::resetScroll(uint32_t nowMs) {
+    _showingValue = false;
+    _valueModeOnly = false;
     _scrollX = 8;
     _lastScrollAt = nowMs;
+}
+
+void MenuController::beginValueDisplay(uint32_t nowMs, bool showMode) {
+    const bool wasShowingValue = _showingValue;
+    _valueModeOnly = showMode;
+
+    char text[16];
+    MenuRgb color = UI_COLOR;
+    const uint8_t length = formatValueLabel(text, sizeof(text), color);
+    const int16_t textWidth = static_cast<int16_t>(length * 4U);
+
+    if (!wasShowingValue) {
+        if (textWidth > 0 && textWidth <= 8) {
+            _valueScrollX = static_cast<int16_t>((8 - (textWidth - 1)) / 2);
+        } else {
+            _valueScrollX = 0;
+        }
+    } else if (textWidth > 0 && textWidth <= 8) {
+        // Short values fit on-screen; keep the complete value readable even
+        // when the previous (longer) value was partway through its marquee.
+        _valueScrollX = static_cast<int16_t>((8 - (textWidth - 1)) / 2);
+    } else if (_valueScrollX > 7 || _valueScrollX + textWidth <= 0) {
+        _valueScrollX = 0;
+    }
+
+    _showingValue = true;
+    _lastValueChangeMs = nowMs;
+    _lastScrollAt = nowMs;
+}
+
+bool MenuController::expireValueDisplay(uint32_t nowMs) {
+    if (!_showingValue ||
+        static_cast<uint32_t>(nowMs - _lastValueChangeMs) < VALUE_DISPLAY_MS) {
+        return false;
+    }
+    _showingValue = false;
+    _valueModeOnly = false;
+    _lastScrollAt = nowMs;
+    return true;
 }
 
 void MenuController::enter(uint32_t nowMs) {
@@ -226,20 +313,39 @@ MenuUpdateResult MenuController::update(uint32_t nowMs, MenuInput input) {
         return MenuUpdateResult::NoChange;
     }
 
+    const bool valueDisplayExpired = expireValueDisplay(nowMs);
     if (input != MenuInput::None) {
         _lastActivityMs = nowMs;
+        const MenuPage pageBeforeInput = _page;
+        const bool editingBeforeInput = _editing;
         const MenuUpdateResult result = handleActiveInput(nowMs, input);
-        if (result == MenuUpdateResult::Changed) resetScroll(nowMs);
-        return result;
+        if (result == MenuUpdateResult::Changed &&
+            (_page != pageBeforeInput || _editing != editingBeforeInput)) {
+            resetScroll(nowMs);
+        }
+        if (result != MenuUpdateResult::NoChange) return result;
+        return valueDisplayExpired ? MenuUpdateResult::Animated
+                                   : MenuUpdateResult::NoChange;
     }
+
+    if (valueDisplayExpired) return MenuUpdateResult::Animated;
 
     if (static_cast<uint32_t>(nowMs - _lastScrollAt) >= SCROLL_STEP_MS) {
         char text[24];
         MenuRgb color = UI_COLOR;
-        const uint8_t length = formatLabel(text, sizeof(text), color);
+        const uint8_t length = _showingValue
+                                   ? formatValueLabel(text, sizeof(text), color)
+                                   : formatLabel(text, sizeof(text), color);
         const int16_t textWidth = static_cast<int16_t>(length * 4U);
-        --_scrollX;
-        if (textWidth > 0 && _scrollX < 2 - textWidth) _scrollX = 8;
+        if (_showingValue) {
+            if (textWidth > 8) {
+                --_valueScrollX;
+                if (_valueScrollX < 2 - textWidth) _valueScrollX = 8;
+            }
+        } else {
+            --_scrollX;
+            if (textWidth > 0 && _scrollX < 2 - textWidth) _scrollX = 8;
+        }
         _lastScrollAt = nowMs;
         return MenuUpdateResult::Animated;
     }
@@ -250,10 +356,9 @@ MenuUpdateResult MenuController::update(uint32_t nowMs, MenuInput input) {
 void MenuController::noteActivity(uint32_t nowMs) {
     if (!_active) return;
     _lastActivityMs = nowMs;
-    resetScroll(nowMs);
 }
 
-MenuUpdateResult MenuController::handleActiveInput(uint32_t,
+MenuUpdateResult MenuController::handleActiveInput(uint32_t nowMs,
                                                     MenuInput input) {
     if (input == MenuInput::Menu) {
         exit();
@@ -275,7 +380,7 @@ MenuUpdateResult MenuController::handleActiveInput(uint32_t,
     }
 
     if (_editing && (input == MenuInput::Up || input == MenuInput::Down)) {
-        return adjust(input == MenuInput::Up ? 1 : 0);
+        return adjust(nowMs, input == MenuInput::Up ? 1 : 0);
     }
 
     if (input != MenuInput::Select) return MenuUpdateResult::NoChange;
@@ -283,6 +388,7 @@ MenuUpdateResult MenuController::handleActiveInput(uint32_t,
     if (_editing) {
         if (_page == MenuPage::SolidColor) {
             _actions.setSolidModeEnabled(!_actions.solidModeEnabled());
+            beginValueDisplay(nowMs, true);
             return MenuUpdateResult::Changed;
         }
         _editing = false;
@@ -296,15 +402,17 @@ MenuUpdateResult MenuController::handleActiveInput(uint32_t,
         return MenuUpdateResult::Changed;
     case MenuPage::Wifi:
         _actions.setWifiEnabled(!_actions.wifiEnabled());
+        beginValueDisplay(nowMs);
         return MenuUpdateResult::Changed;
     case MenuPage::Fps:
         _actions.setFps(nextFpsPreset(clampFps(_actions.fps())));
+        beginValueDisplay(nowMs);
         return MenuUpdateResult::Changed;
     }
     return MenuUpdateResult::NoChange;
 }
 
-MenuUpdateResult MenuController::adjust(uint8_t direction) {
+MenuUpdateResult MenuController::adjust(uint32_t nowMs, uint8_t direction) {
     switch (_page) {
     case MenuPage::Brightness: {
         const uint8_t value = _actions.brightness();
@@ -320,6 +428,7 @@ MenuUpdateResult MenuController::adjust(uint8_t direction) {
         }
         if (next == value) return MenuUpdateResult::NoChange;
         _actions.setBrightness(next);
+        beginValueDisplay(nowMs);
         return MenuUpdateResult::Changed;
     }
     case MenuPage::SolidColor: {
@@ -329,6 +438,7 @@ MenuUpdateResult MenuController::adjust(uint8_t direction) {
         const uint8_t index = wrapColorIndex(next);
         if (index == _actions.solidColorIndex()) return MenuUpdateResult::NoChange;
         _actions.setSolidColorIndex(index);
+        beginValueDisplay(nowMs);
         return MenuUpdateResult::Changed;
     }
     case MenuPage::Wifi:
@@ -347,8 +457,13 @@ void MenuController::render(MenuDisplay& display) const {
 
     char text[24];
     MenuRgb color = UI_COLOR;
-    formatLabel(text, sizeof(text), color);
-    drawText(display, _scrollX, text, color);
+    if (_showingValue) {
+        formatValueLabel(text, sizeof(text), color);
+        drawText(display, _valueScrollX, text, color);
+    } else {
+        formatLabel(text, sizeof(text), color);
+        drawText(display, _scrollX, text, color);
+    }
 
     switch (_page) {
     case MenuPage::Brightness: {

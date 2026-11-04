@@ -42,6 +42,16 @@ public:
     void show() { ++shows; }
 };
 
+static bool hasTextPixels(const TestDisplay& display) {
+    for (uint8_t y = 1; y <= 5; ++y) {
+        for (uint8_t x = 0; x < 8; ++x) {
+            const TestDisplay::Pixel& pixel = display.pixels[y * 8U + x];
+            if (pixel.r || pixel.g || pixel.b) return true;
+        }
+    }
+    return false;
+}
+
 static void openMenu(MenuController& menu, uint32_t now) {
     assert(menu.update(now, MenuInput::Menu) == MenuUpdateResult::Entered);
 }
@@ -119,6 +129,35 @@ int main() {
     openMenu(menu, 200);
     assert(menu.update(300, MenuInput::None) == MenuUpdateResult::Animated);
     assert(menu.update(301, MenuInput::Back) == MenuUpdateResult::Exited);
+
+    // A value change temporarily replaces the full label with just the value.
+    // Repeated changes keep that feedback visible until 3 seconds after the
+    // latest change, then the regular marquee resumes from its saved position.
+    TestActions feedbackActions;
+    feedbackActions.brightnessValue = 128;
+    TestDisplay feedbackDisplay;
+    MenuController feedbackMenu(feedbackActions);
+    openMenu(feedbackMenu, 1000);
+    feedbackMenu.render(feedbackDisplay);
+    assert(!hasTextPixels(feedbackDisplay));
+    feedbackMenu.update(1001, MenuInput::Select);
+    assert(feedbackMenu.update(1002, MenuInput::Up) == MenuUpdateResult::Changed);
+    assert(feedbackActions.brightnessValue == 144);
+    feedbackMenu.render(feedbackDisplay);
+    assert(feedbackDisplay.pixels[8].g == 180); // Value-only "56" starts at x=0.
+
+    assert(feedbackMenu.update(1100, MenuInput::Up) == MenuUpdateResult::Changed);
+    assert(feedbackActions.brightnessValue == 160);
+    assert(feedbackMenu.update(4099, MenuInput::None) == MenuUpdateResult::Animated);
+    feedbackMenu.render(feedbackDisplay);
+    assert(hasTextPixels(feedbackDisplay));
+
+    assert(feedbackMenu.update(4100, MenuInput::None) == MenuUpdateResult::Animated);
+    feedbackMenu.render(feedbackDisplay);
+    assert(!hasTextPixels(feedbackDisplay)); // Full label waits at the saved x=8.
+    assert(feedbackMenu.update(4200, MenuInput::None) == MenuUpdateResult::Animated);
+    feedbackMenu.render(feedbackDisplay);
+    assert(feedbackDisplay.pixels[15].g == 180); // "BRIGHT" resumes at the left edge.
 
     // Timeout and timestamp wraparound are both supported.
     openMenu(menu, 100);

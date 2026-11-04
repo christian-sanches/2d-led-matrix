@@ -82,6 +82,7 @@ public:
     static const uint32_t MAX_TIMEOUT_MS = 10000;
     static const uint8_t BRIGHTNESS_STEP = 16;
     static const uint32_t SCROLL_STEP_MS = 100;
+    static const uint32_t VALUE_DISPLAY_MS = 3000;
 
     explicit MenuController(MenuActions& actions,
                             uint32_t timeoutMs = DEFAULT_TIMEOUT_MS);
@@ -93,8 +94,8 @@ public:
     // Settings are volatile.
     MenuUpdateResult update(uint32_t nowMs, MenuInput input = MenuInput::None);
 
-    // Reset the inactivity timeout when the application handles another
-    // recognized control while the menu is visible (e.g. power/brightness).
+    // Reset inactivity timeout for another recognized control while visible
+    // (e.g. power/brightness), without restarting the current text scroll.
     void noteActivity(uint32_t nowMs);
 
     // Draws only while active. It never clears or changes the display while
@@ -119,8 +120,11 @@ private:
     void exit();
     void resetScroll(uint32_t nowMs);
     uint8_t formatLabel(char* text, size_t capacity, MenuRgb& color) const;
+    uint8_t formatValueLabel(char* text, size_t capacity, MenuRgb& color) const;
+    void beginValueDisplay(uint32_t nowMs, bool showMode = false);
+    bool expireValueDisplay(uint32_t nowMs);
     MenuUpdateResult handleActiveInput(uint32_t nowMs, MenuInput input);
-    MenuUpdateResult adjust(uint8_t direction);
+    MenuUpdateResult adjust(uint32_t nowMs, uint8_t direction);
 
     MenuActions& _actions;
     uint32_t _timeoutMs;
@@ -129,5 +133,9 @@ private:
     bool _active;
     bool _editing;
     int16_t _scrollX;
+    int16_t _valueScrollX;
     uint32_t _lastScrollAt;
+    uint32_t _lastValueChangeMs;
+    bool _showingValue;
+    bool _valueModeOnly;
 };

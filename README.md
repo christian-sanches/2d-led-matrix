@@ -65,8 +65,8 @@ Place valid files directly in `/PRESETS` on the SD card (FAT filesystem). The
 firmware discovers `.dat` files, rejects invalid files, sorts valid paths in
 bytewise filename order, and cycles through that order. At most 32 valid
 presets are retained; full paths must fit in 63 bytes (54 filename bytes after
-`/PRESETS/`). Playback starts at 30 FPS and is menu-adjustable from 1–60 FPS;
-DAT v1 has no per-frame timing.
+`/PRESETS/`). Playback starts at 30 FPS and is menu-adjustable with presets at
+15, 24, 30, 48, and 60 FPS; DAT v1 has no per-frame timing.
 
 Each frame is exactly 192 bytes: 64 row-major RGB888 pixels, starting at the
 logical top-left and proceeding across each row to the bottom-right. Serpentine
@@ -124,17 +124,20 @@ rejected; it is never retried as legacy data. Legacy playback remains supported.
   logical power toggle; it is not a menu key and has no long-press behavior.
 - The menu has four pages in this order: brightness, Wi-Fi, solid color, and
   FPS. Each page scrolls a readable 3×5-font label (uppercase letters, digits,
-  and basic symbols) from right to left in normal reading order; the serial monitor also prints the page
-  name. Brightness is shown as a percentage. The remaining row shows a
-  brightness or FPS bar, Wi-Fi status, or the selected color swatch.
+  and basic symbols) from right to left in normal reading order; the serial
+  monitor also prints the page name. Brightness is shown as a percentage. The
+  remaining row shows a brightness or FPS bar, Wi-Fi status, or the selected
+  color swatch.
 - Select enters brightness/color editing; Up/Down changes brightness in
   16-point steps or cycles the eight-color palette (red, green, blue, yellow,
   cyan, magenta, white, amber). Select in color editing toggles solid mode.
   Select on Wi-Fi toggles the radio. **Each Select click on the FPS page cycles
   15 → 24 → 30 → 48 → 60 → 15 FPS**, and the numeric value scrolls across the
-  matrix. Back leaves editing or exits at the root; Menu also exits. Power is
-  intentionally not a menu page: the physical button and mapped IR power
-  action still control it.
+  matrix. Each value change temporarily shows only the current value for 3
+  seconds after the last change, then resumes the full label from its previous
+  scroll position. Back leaves editing or exits at the root; Menu also exits.
+  Power is intentionally not a menu page: the physical button and mapped IR
+  power action still control it.
 - Settings are volatile; none are written to flash or SD. Wi-Fi enable selects
   station radio mode and explicitly disconnects; it does not connect to an AP
   or start an AP, server, or provisioning flow. Wi-Fi defaults off at startup.
