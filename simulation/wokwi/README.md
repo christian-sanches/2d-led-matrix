@@ -59,11 +59,12 @@ Use the virtual IR remote beside the receiver:
 
 The four text pages are, in order: `BRIGHT nn%`, `WIFI ON/OFF`, the selected
 color and `SOLID`/`ANIM`, and `FPS nn`. Uppercase letters, digits, and simple
-symbols use a built-in 3×5 bitmap font and scroll left-to-right. The status row
-shows a brightness/FPS bar, Wi-Fi state, or selected color. The serial monitor
-also prints the page name whenever it changes. The menu no longer has a power
-page; use the Power remote key or physical button instead. Any menu navigation,
-recognized application action, or button press refreshes the 7-second timeout.
+symbols use a built-in 3×5 bitmap font and scroll **from right to left in normal
+reading order**. The status row shows a brightness/FPS bar, Wi-Fi state, or
+selected color. The serial monitor also prints the page name whenever it
+changes. The menu no longer has a power page; use the Power remote key or
+physical button instead. Any menu navigation, recognized application action,
+or button press refreshes the 7-second timeout.
 
 On the FPS page, each Play press cycles **15 → 24 → 30 → 48 → 60 FPS** and the
 selected number scrolls across the matrix.
