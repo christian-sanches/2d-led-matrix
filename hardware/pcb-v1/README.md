@@ -31,9 +31,10 @@ IR connector will be silk-labelled `SIG / 3V3 / GND`; user wire colors are not a
 
 ## Power and protection plan
 
-- External 5 V supply for the LED matrix, recommended 5 V / 5 A. The NodeMCU remains powered by its own USB connection; do not connect the matrix supply to NodeMCU VIN/VU.
+- External 5 V supply for the LED matrix, recommended 5 V / 5 A. It feeds only J7, the matrix terminal J6, the level shifter U2, the bulk/bypass capacitors and the optional 5 V SD setting. It does **not** feed the NodeMCU.
+- The NodeMCU is powered by its own micro-USB connection. `+3V3` on this board is an **output** from the NodeMCU (J2.6), distributed to the IR header and — through JP1 — to the microSD module. `VIN` (J1.15) and `VU` (J1.3) are intentionally unconnected.
 - Common ground between external supply, matrix, NodeMCU, SD breakout, and IR receiver.
-- 3-position solder-jumper or header selector for SD module VCC: `3V3` or `5V`; select only after checking the breakout's input specification.
+- JP1 selects the SD module supply: jumper **1–2 = 3V3** (the tested configuration) or **2–3 = 5V** for a 5 V-tolerant module. Fit the jumper only after checking the module.
 - SN74AHCT1G125DBVR (SOT-23-5), powered from external +5 V for reliable 3.3 V-to-5 V NeoPixel data translation; 100 nF local bypass capacitor.
 - 330–470 Ω series resistor on `LED_DATA` and 500–1000 µF bulk capacitor across matrix +5 V/GND.
 - High-current +5 V and GND routing to use wide copper pours/tracks and connectors rated for at least 5 A. Verify copper weight and temperature-rise assumptions before release.
@@ -46,5 +47,5 @@ IR connector will be silk-labelled `SIG / 3V3 / GND`; user wire colors are not a
 - [x] Gerbers and Excellon drill files generated in `fabrication/`; ready-to-upload archive at `2d-led-matrix-carrier-gerbers.zip`.
 - [ ] Confirm physical placement/clearance of the SD breakout and card insertion path.
 - [ ] Confirm whether the existing perfboard's four corner holes should be carried over and their exact centers (currently assumed 3.5 mm from each corner).
-- [ ] Confirm the SD breakout VCC rating and set JP1 to `3V3` or `5V`.
+- [x] SD module VCC confirmed at 3.3 V: fit JP1 jumper between pins 1 (`3V3`) and 2 (`SD`).
 - [ ] Inspect the board at 1:1 scale (print `previews/pcb-1to1.pdf`) before ordering.

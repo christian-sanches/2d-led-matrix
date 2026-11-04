@@ -10,7 +10,7 @@
 - [x] Executar DRC, corrigir violações e verificar a paridade esquemático↔PCB: 0 violações / 0 desconectados.
 - [x] Exportar Gerbers e arquivos de furação em `fabrication/`.
 - [ ] Revisar encaixe/clearance do NodeMCU, SD e conectores na visualização 1:1. **Etapa atual.**
-- [ ] Confirmar a tensão do módulo SD (JP1: 3V3 ou 5V).
+- [x] Confirmar a tensão do módulo SD: 3,3 V (jumper do JP1 entre os pinos 1 e 2).
 - [ ] Confirmar a posição dos quatro furos de fixação no perfboard atual.
 
 > Ainda não enviar arquivos para fabricação até concluir a revisão 1:1 e as duas confirmações físicas acima.
