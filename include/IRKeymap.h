@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include "ControlState.h"
+#include "MenuController.h"
 
 // Replace these deliberately disabled values with the full NEC values observed
 // on the serial monitor. No physical remote codes have been verified yet.
@@ -33,6 +34,25 @@
 #define IR_COMMAND_SOLID_WHITE 0ULL
 #endif
 
+// Menu navigation is a separate configurable NEC map. Keep these unique from
+// the application action codes; all are disabled until observed on the user's
+// remote and entered here.
+#ifndef IR_COMMAND_MENU
+#define IR_COMMAND_MENU 0ULL
+#endif
+#ifndef IR_COMMAND_MENU_UP
+#define IR_COMMAND_MENU_UP 0ULL
+#endif
+#ifndef IR_COMMAND_MENU_DOWN
+#define IR_COMMAND_MENU_DOWN 0ULL
+#endif
+#ifndef IR_COMMAND_MENU_SELECT
+#define IR_COMMAND_MENU_SELECT 0ULL
+#endif
+#ifndef IR_COMMAND_MENU_BACK
+#define IR_COMMAND_MENU_BACK 0ULL
+#endif
+
 inline ControlAction actionForIrCommand(uint64_t code) {
     if (code == 0) return ControlAction::None;
     if (IR_COMMAND_POWER && code == IR_COMMAND_POWER) return ControlAction::PowerToggle;
@@ -45,4 +65,14 @@ inline ControlAction actionForIrCommand(uint64_t code) {
     if (IR_COMMAND_SOLID_BLUE && code == IR_COMMAND_SOLID_BLUE) return ControlAction::SolidBlue;
     if (IR_COMMAND_SOLID_WHITE && code == IR_COMMAND_SOLID_WHITE) return ControlAction::SolidWhite;
     return ControlAction::None;
+}
+
+inline MenuInput menuInputForIrCommand(uint64_t code) {
+    if (code == 0) return MenuInput::None;
+    if (IR_COMMAND_MENU && code == IR_COMMAND_MENU) return MenuInput::Menu;
+    if (IR_COMMAND_MENU_UP && code == IR_COMMAND_MENU_UP) return MenuInput::Up;
+    if (IR_COMMAND_MENU_DOWN && code == IR_COMMAND_MENU_DOWN) return MenuInput::Down;
+    if (IR_COMMAND_MENU_SELECT && code == IR_COMMAND_MENU_SELECT) return MenuInput::Select;
+    if (IR_COMMAND_MENU_BACK && code == IR_COMMAND_MENU_BACK) return MenuInput::Back;
+    return MenuInput::None;
 }
