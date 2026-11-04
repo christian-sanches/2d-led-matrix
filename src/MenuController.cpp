@@ -150,6 +150,17 @@ MenuRgb MenuController::colorAt(uint8_t index) {
     return PALETTE[clampColorIndex(index)];
 }
 
+const char* MenuController::pageName(MenuPage page) {
+    switch (page) {
+    case MenuPage::Brightness: return "brightness";
+    case MenuPage::Wifi: return "Wi-Fi";
+    case MenuPage::SolidColor: return "solid color";
+    case MenuPage::Fps: return "FPS";
+    case MenuPage::Power: return "power";
+    }
+    return "unknown";
+}
+
 uint32_t MenuController::normalizedTimeout(uint32_t value) const {
     if (value < MIN_TIMEOUT_MS) return MIN_TIMEOUT_MS;
     if (value > MAX_TIMEOUT_MS) return MAX_TIMEOUT_MS;
@@ -185,6 +196,10 @@ MenuUpdateResult MenuController::update(uint32_t nowMs, MenuInput input) {
     if (input == MenuInput::None) return MenuUpdateResult::NoChange;
     _lastActivityMs = nowMs;
     return handleActiveInput(nowMs, input);
+}
+
+void MenuController::noteActivity(uint32_t nowMs) {
+    if (_active) _lastActivityMs = nowMs;
 }
 
 MenuUpdateResult MenuController::handleActiveInput(uint32_t,

@@ -220,6 +220,7 @@ void loop() {
     // The physical button remains a short-press logical power toggle.
     if (button.update(digitalRead(PIN_BTN) == HIGH, now)) {
         dispatch(ControlAction::PowerToggle);
+        menu.noteActivity(now);
         stateChanged = true;
     }
 
@@ -234,6 +235,7 @@ void loop() {
             const ControlAction action = actionForIrCommand(code);
             if (action != ControlAction::None) {
                 dispatch(action);
+                menu.noteActivity(now);
                 stateChanged = true;
             }
         }
@@ -242,6 +244,13 @@ void loop() {
 
     const MenuUpdateResult menuResult = menu.update(now, menuInput);
     if (menuResult != MenuUpdateResult::NoChange) stateChanged = true;
+    if (menuResult == MenuUpdateResult::Entered ||
+        menuResult == MenuUpdateResult::Changed) {
+        Serial.print(F("Menu page: "));
+        Serial.println(MenuController::pageName(menu.page()));
+    } else if (menuResult == MenuUpdateResult::Exited) {
+        Serial.println(F("Menu closed."));
+    }
 
     const bool powered = controls.isPowered();
     if (!powered) {

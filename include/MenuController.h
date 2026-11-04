@@ -95,6 +95,10 @@ public:
     // change immediately through MenuActions and are not persisted here.
     MenuUpdateResult update(uint32_t nowMs, MenuInput input = MenuInput::None);
 
+    // Reset the inactivity timeout when the application handles another
+    // recognized control while the menu is visible (e.g. power/brightness).
+    void noteActivity(uint32_t nowMs);
+
     // Draws only while active. It never clears or changes the display while
     // inactive, allowing the caller to resume normal content rendering.
     void render(MenuDisplay& display) const;
@@ -102,6 +106,7 @@ public:
     bool isActive() const { return _active; }
     bool isEditing() const { return _editing; }
     MenuPage page() const { return _page; }
+    static const char* pageName(MenuPage page);
 
     // Fixed palette used for the preview and by the application adapter.
     static MenuRgb colorAt(uint8_t index);

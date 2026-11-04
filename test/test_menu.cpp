@@ -122,6 +122,11 @@ int main() {
     assert(display.writes == oldWrites);
 
     // Timeout and timestamp wraparound are both supported.
+    openMenu(menu, 100);
+    menu.noteActivity(6000); // A recognized app action also keeps the menu alive.
+    assert(menu.update(12000, MenuInput::None) == MenuUpdateResult::NoChange);
+    assert(menu.update(13000, MenuInput::None) == MenuUpdateResult::Exited);
+
     openMenu(menu, 0xFFFFFF00UL);
     assert(menu.update(0x00001A57UL) == MenuUpdateResult::NoChange);
     assert(menu.update(0x00001A58UL) == MenuUpdateResult::Exited);

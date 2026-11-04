@@ -129,7 +129,10 @@ rejected; it is never retried as legacy data. Legacy playback remains supported.
   solid-color mode. Back returns from editing or exits at the root; Menu also
   exits. With no input, the menu exits after 7 seconds (bounded to 5–10 seconds
   by the module) and restores the current content. Animation advancement pauses
-  while the overlay is open and resumes from its retained player state.
+  while the overlay is open and resumes from its retained player state. Any
+  recognized app control or button action while the menu is open also resets
+  the inactivity timer. The serial monitor prints the current page name when
+  the menu changes.
 - Menu brightness (0–255), FPS (1–60), palette selection, mode, power, and
   Wi-Fi radio state are volatile; none are written to flash or SD. Brightness
   changes in 16-point steps. Wi-Fi enable selects station radio mode and
